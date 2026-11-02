@@ -11,7 +11,7 @@ export const waHref=text=>'https://wa.me/'+PHONE+'?text='+encodeURIComponent(tex
 export const cardStyleName=style=>({slate:'slate',ornate:'ornate',classic:'classic',standard:'slate',compact:'slate',poster:'slate',minimal:'classic'})[style]||'slate';
 export const initialSelection=product=>({variant:cleanSize(product.variants[0]||''),color:product.colors[0]||''});
 export const orderDetail=(product,selection)=>[product.name,noteOf(product),selection.variant,selection.color].filter(Boolean).join(' · ');
-export const orderURL=(product,selection)=>waHref('Përshëndetje Reka Horeca! Dëshiroj të porosis: '+orderDetail(product,selection)+'. Ju lutem më informoni për çmimin dhe disponueshmërinë. Faleminderit!');
+export const orderURL=(product,selection)=>waHref('Përshëndetje Reka Horeca! Dëshiroj të porosis: '+orderDetail(product,selection)+'. Faleminderit!');
 
 // Fades the right edge of a chip row only when it actually scrolls.
 const fits=new ResizeObserver(entries=>{for(const {target} of entries)target.classList.toggle('is-scroll',target.scrollWidth>target.clientWidth+1)});
@@ -29,11 +29,18 @@ function options(label,values,selection,key,fallback,onChange){
  fits.observe(list);return box;
 }
 
-// Always two rows (size + color/price) so every card keeps the same height, whatever properties the product has.
-export function buildOptions(product,selection,onChange){
+// Two rows (size + colors/blurb) so every card keeps the same height. The sheet passes sheet=true: it already shows the full description.
+export function buildOptions(product,selection,onChange,{sheet=false}={}){
  const box=element('div','','card-options');
  box.append(options('Përmasa',product.variants.map(cleanSize),selection,'variant','Standard',onChange));
- box.append(product.colors.length?options('Ngjyra',product.colors,selection,'color','',onChange):options('Çmimi',[],selection,'','Sipas kërkesës',onChange));
+ if(product.colors.length)box.append(options('Ngjyra',product.colors,selection,'color','',onChange));
+ else if(!sheet)box.append(blurb(product));
+ return box;
+}
+
+function blurb(product){
+ const box=element('div','','opt'),text=product.description.trim();
+ box.append(element('span',text?'Rreth produktit':'Detaje','opt-label'),element('p',text||'Pyesni në WhatsApp për këtë produkt.','opt-text'));
  return box;
 }
 

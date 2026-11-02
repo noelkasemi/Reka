@@ -21,6 +21,7 @@
 /* Option chips (replace raw dropdowns). Colors come from the card style / sheet via --chip-* */
 .opt{display:grid;gap:5px;min-width:0}
 .opt-label{font:700 9.5px/1 Arial,Helvetica,sans-serif;letter-spacing:.14em;text-transform:uppercase;opacity:.72}
+.opt-text{margin:0;min-height:2.7em;font:400 11.5px/1.35 Arial,Helvetica,sans-serif;opacity:.85;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .chips{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;padding:2px;margin:0 -2px}
 .chips::-webkit-scrollbar{display:none}
 .chips.is-scroll{-webkit-mask:linear-gradient(90deg,#000 calc(100% - 22px),#0000);mask:linear-gradient(90deg,#000 calc(100% - 22px),#0000)}

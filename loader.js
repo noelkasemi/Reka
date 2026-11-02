@@ -5,14 +5,16 @@
  window.RekaLoader={
   cat,
   // dim=true: translucent overlay for in-app actions (save/publish); default is the opaque page-load screen.
-  show(text='Po ngarkohet',{dim=false}={}){
+  show(text='Po ngarkohet',{dim=false,brand=false}={}){
    if(!el){
     el=document.createElement('div');el.id='reka-loader';el.setAttribute('role','status');el.setAttribute('aria-live','polite');el.setAttribute('popover','manual');
-    el.innerHTML='<div class="rl-box">'+cat+'<p class="rl-text"><span class="rl-msg"></span><span class="rl-dots"><i></i><i></i><i></i></span></p></div>';
+    el.innerHTML='<div class="rl-box"></div>';
     document.documentElement.append(el);
    }
    run++;shownAt=Date.now();
-   el.querySelector('.rl-msg').textContent=text;
+   // brand=true: quiet logo loader for the public sites; the cat is only for the CMS.
+   el.firstChild.innerHTML=brand?'<img class="rl-logo" src="assets/logo.png" alt="Reka Horeca"><span class="rl-line"></span><span class="rl-sr rl-msg"></span>':cat+'<p class="rl-text"><span class="rl-msg"></span><span class="rl-dots"><i></i><i></i><i></i></span></p>';
+   el.querySelector('.rl-msg').textContent=text;el.classList.toggle('rl-brand',brand);
    el.classList.toggle('rl-dim',dim);el.classList.remove('rl-out');el.hidden=false;
    // popover = top layer, so the cat also covers open <dialog>s
    try{if(!el.matches(':popover-open'))el.showPopover()}catch{}

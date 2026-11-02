@@ -35,3 +35,14 @@
 @keyframes rl-thread{to{stroke-dashoffset:-18}}
 @keyframes rl-dot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-4px)}}
 @media(prefers-reduced-motion:reduce){.cat *,.rl-dots i{animation:none!important}}
+
+/* Brand loader (public sites): logo + thin sweeping line on the page background */
+#reka-loader.rl-brand{background:var(--cream,#f5f1e7)}
+.rl-brand .rl-box{gap:24px;padding:0}
+.rl-logo{display:block;width:min(300px,70vw);height:auto;animation:rl-breathe 2.6s ease-in-out infinite}
+.rl-line{position:relative;display:block;width:min(150px,40vw);height:2px;overflow:hidden;border-radius:2px;background:#b89a5238}
+.rl-line::after{content:"";position:absolute;top:0;bottom:0;width:42%;border-radius:2px;background:#b89a52;animation:rl-slide 1.4s ease-in-out infinite}
+.rl-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@keyframes rl-breathe{0%,100%{opacity:.82}50%{opacity:1}}
+@keyframes rl-slide{from{left:-45%}to{left:103%}}
+@media(prefers-reduced-motion:reduce){.rl-logo,.rl-line::after{animation:none}.rl-line::after{left:30%}}
