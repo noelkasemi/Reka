@@ -7,21 +7,21 @@
 .product-image img.loaded{opacity:1}
 .product-image:not(.ready)::before{content:"";position:absolute;inset:14% 18%;border-radius:18px;background:linear-gradient(100deg,#0000 20%,#ffffff55 50%,#0000 80%) 0 0/220% 100%,#8883;animation:card-shimmer 1.3s linear infinite}
 .card-body{display:flex;flex:1;flex-direction:column;min-width:0}
-.card h3{margin:0;font-weight:400;font-size:15px;line-height:1.16;letter-spacing:.02em;text-transform:uppercase;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;min-height:2.32em}
-.card[data-title=long] h3{font-size:13px}
-.card-note{margin:5px 0 0;min-height:1.3em;font-size:11px;line-height:1.3;opacity:.78;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card-options{margin-top:auto;padding-top:10px;display:grid;gap:9px}
+.card h3{margin:0;font-weight:700;font-size:14px;line-height:1.2;letter-spacing:.01em;text-transform:uppercase;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;min-height:2.4em}
+.card[data-title=long] h3{font-size:12.5px}
+.card-note{margin:4px 0 0;min-height:1.3em;font:400 11.5px/1.3 Arial,Helvetica,sans-serif;opacity:.68;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-options{margin-top:auto;padding-top:12px;display:grid;gap:10px}
 .order{display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;margin-top:12px;border-radius:10px;font:700 14px/1 Arial,Helvetica,sans-serif;text-decoration:none;transition:transform .15s,filter .15s,box-shadow .15s}
 .order span{font-family:Arial,Helvetica,sans-serif}
 .order:hover{transform:translateY(-1px);filter:brightness(1.07)}.order:active{transform:scale(.98)}
 .order svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.quick{position:absolute;top:6px;right:6px;z-index:3;width:30px;height:30px;padding:0;border:0;border-radius:50%;background:var(--button);color:var(--buttonText);font:400 20px/1 Arial,sans-serif;cursor:pointer;opacity:.9;box-shadow:0 2px 8px #0003}
-.quick:hover{opacity:1}
+.is-link{cursor:pointer}
+.product-image.is-link img{transition:opacity .3s ease,transform .3s ease}.product-image.is-link:hover img{transform:scale(1.04)}
+.product-image.is-link:focus-visible{outline:3px solid var(--gold);outline-offset:-3px}
 
 /* Option chips (replace raw dropdowns). Colors come from the card style / sheet via --chip-* */
 .opt{display:grid;gap:5px;min-width:0}
 .opt-label{font:700 9.5px/1 Arial,Helvetica,sans-serif;letter-spacing:.14em;text-transform:uppercase;opacity:.72}
-.opt-text{margin:0;min-height:2.7em;font:400 11.5px/1.35 Arial,Helvetica,sans-serif;opacity:.85;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .chips{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;padding:2px;margin:0 -2px}
 .chips::-webkit-scrollbar{display:none}
 .chips.is-scroll{-webkit-mask:linear-gradient(90deg,#000 calc(100% - 22px),#0000);mask:linear-gradient(90deg,#000 calc(100% - 22px),#0000)}
@@ -44,7 +44,6 @@
 .card.ornate{--cut:14px;--chip-bg:color-mix(in srgb,var(--ornateText) 8%,transparent);--chip-line:color-mix(in srgb,var(--ornateText) 35%,transparent);--chip-text:var(--ornateText);--chip-on:var(--ornateButton);--chip-on-text:var(--ornateButtonText);padding:8px;background:var(--ornateCard);color:var(--ornateText);-webkit-mask:radial-gradient(var(--cut) at 0 0,#0000 98%,#000) 0 0/51% 51% no-repeat,radial-gradient(var(--cut) at 100% 0,#0000 98%,#000) 100% 0/51% 51% no-repeat,radial-gradient(var(--cut) at 0 100%,#0000 98%,#000) 0 100%/51% 51% no-repeat,radial-gradient(var(--cut) at 100% 100%,#0000 98%,#000) 100% 100%/51% 51% no-repeat;mask:radial-gradient(var(--cut) at 0 0,#0000 98%,#000) 0 0/51% 51% no-repeat,radial-gradient(var(--cut) at 100% 0,#0000 98%,#000) 100% 0/51% 51% no-repeat,radial-gradient(var(--cut) at 0 100%,#0000 98%,#000) 0 100%/51% 51% no-repeat,radial-gradient(var(--cut) at 100% 100%,#0000 98%,#000) 100% 100%/51% 51% no-repeat}
 .card.ornate .product-image{--inner-cut:13px;height:140px;padding:8px;background:var(--ornateImage);overflow:hidden}
 .card.ornate .product-image:after{content:"";position:absolute;inset:-1px;z-index:2;pointer-events:none;background:radial-gradient(circle at 0 0,var(--ornateCard) 0 var(--inner-cut),transparent calc(var(--inner-cut) + 1px)),radial-gradient(circle at 100% 0,var(--ornateCard) 0 var(--inner-cut),transparent calc(var(--inner-cut) + 1px)),radial-gradient(circle at 0 100%,var(--ornateCard) 0 var(--inner-cut),transparent calc(var(--inner-cut) + 1px)),radial-gradient(circle at 100% 100%,var(--ornateCard) 0 var(--inner-cut),transparent calc(var(--inner-cut) + 1px))}
-.card.ornate .quick{top:15px;right:15px}
 .card.ornate .card-body{padding:12px 6px 6px}
 .card.ornate .order{background:var(--ornateButton);color:var(--ornateButtonText);border-radius:6px}
 
