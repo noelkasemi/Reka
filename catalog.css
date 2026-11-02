@@ -21,17 +21,3 @@ footer{background:var(--footer);color:var(--footerText);border-top:1px solid var
 @media(max-width:720px){.card[data-title=long] h3{font-size:15px;line-height:1.08}.card[data-image-shape=wide] .product-image img{width:124%;max-width:124%}.card[data-image-shape=tall] .product-image img{width:102%;max-width:102%;height:120%;max-height:120%}.card[data-options="0"] .variant{min-height:0}.card[data-options="2"] .card-body{padding-bottom:11px}}
 @media(max-width:360px){.catalog{padding-left:3%;padding-right:3%}.grid{gap:7px}.card.slate .card-body{padding-left:9px;padding-right:9px}.card.slate h3,.card.ornate h3,.card.classic h3{font-size:16px}.card[data-title=long] h3{font-size:14px}.card select{font-size:10px}.order{font-size:11px}.order svg{width:14px;height:14px}}
 @media(prefers-reduced-motion:reduce){.product-image img{transition:none}}
-
-/* Mobile-first image + control fixes: show whole product, never crop or overflow the card */
-.grid .card[data-image-shape] .product-image img,.grid .card .product-image img{width:100%;max-width:100%;height:100%;max-height:100%;object-fit:contain}
-.grid .card.slate .product-image{overflow:visible}
-.filters{scrollbar-width:none}.filters::-webkit-scrollbar{display:none}
-@media(max-width:720px){
- .card select,.variant select{font-size:16px;min-height:44px}
- .card p{font-size:13px}.card-category{font-size:10px}.card h3{font-size:18px}
- .order{min-height:46px;font-size:14px}
- .grid{gap:12px}
- .card.slate .product-image{height:150px;margin-bottom:-40px}
- .card.ornate .product-image{height:150px}.card.classic .product-image{height:150px}
-}
-@media(max-width:360px){.grid{grid-template-columns:minmax(0,1fr)}}
