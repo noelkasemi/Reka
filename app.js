@@ -14,6 +14,7 @@ const selections=new Map(),nodes=new Map();
 const sheet=$('#sheet'),host=$('#products'),filters=$('#filters'),search=$('#search');
 
 const reveal='IntersectionObserver' in window?new IntersectionObserver(entries=>{for(const entry of entries)if(entry.isIntersecting){entry.target.classList.add('in');reveal.unobserve(entry.target)}},{rootMargin:'0px 0px -6% 0px'}):null;
+const EMPTY_ICON='<svg class="empty-icon" viewBox="0 0 64 64" aria-hidden="true"><circle cx="28" cy="28" r="16"/><path d="m40 40 16 16"/></svg>';
 const selectionOf=product=>{if(!selections.has(product.id))selections.set(product.id,initialSelection(product));return selections.get(product.id)};
 
 function cardFor(product,eager=false){
@@ -43,9 +44,21 @@ function render(){
 
 function showEmpty(title,text,action,handler){
  const box=$('#empty');box.hidden=false;box.replaceChildren();
- box.insertAdjacentHTML('afterbegin',RekaLoader.cat.replace('class="cat"','class="cat still"'));
+ box.insertAdjacentHTML('afterbegin',EMPTY_ICON);
  const button=element('button',action,'btn');button.type='button';button.onclick=handler;
  box.append(element('h3',title),element('p',text),button);
+}
+
+// Spotlight: products flagged "featured" in the CMS (max 6); otherwise the top 4 by priority.
+function renderSpotlight(){
+ const row=$('#spot'),featured=products.filter(product=>product.featured).slice(0,6),picks=featured.length?featured:products.slice(0,4);
+ row.replaceChildren();row.hidden=!picks.length;
+ for(const product of picks){
+  const card=element('button','','spot-card'),picture=element('span','','spot-img'),image=element('img');
+  card.type='button';image.src=imageURL(product.image);image.alt='';image.decoding='async';picture.append(image);
+  card.append(picture,element('span',product.name,'spot-name'),element('span','Shiko më shumë ›','spot-cta'));
+  card.onclick=()=>openSheet(product);row.append(card);
+ }
 }
 
 function resetFilters(){search.value='';setCategory('')}
@@ -61,7 +74,7 @@ function openSheet(product){
  body.append(element('p',product.category,'sheet-cat'),element('h2',product.name));
  if(noteOf(product))body.append(element('p',noteOf(product),'sheet-note'));
  if(product.description)body.append(element('p',product.description,'sheet-desc'));
- body.append(buildOptions(product,selection,update),order);
+ body.append(buildOptions(product,selection,update,{sheet:true}),order);
  const inner=element('div','','sheet-inner');inner.append(picture,body);
  sheet.replaceChildren(inner);sheet.showModal();
  sheet.onclose=()=>{const old=nodes.get(product.id);if(old)old.replaceWith(cardFor(product))};
@@ -87,8 +100,7 @@ try{
   button.onclick=()=>{setCategory(name);scrollTo({top:Math.max(0,$('#katalogu').offsetTop-1),behavior:'smooth'})};
   filters.append(button);
  }
- $('#stat-products').textContent=products.length;$('#stat-cats').textContent=names.length;
- const art=$('#hero-art');for(const product of products.filter(item=>item.image).slice(0,3)){const image=element('img');image.src=imageURL(product.image);image.alt='';art.append(image)}
+ renderSpotlight();
  render();
  // Hold the cat until the first row of photos is in, but never longer than 2.5 s.
  await Promise.race([Promise.all([...host.querySelectorAll('img')].slice(0,4).map(waitFor)),new Promise(done=>setTimeout(done,2500))]);
