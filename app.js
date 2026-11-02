@@ -1,48 +1,99 @@
 import {applyTheme,element,loadCatalog,imageURL} from './theme.js';
+import {buildOptions,cardStyleName,createCard,initialSelection,noteOf,orderURL,waHref} from './card.js';
 
-let products=[],category='Të gjitha';
-const selected=new Map(),grid=document.querySelector('#products'),filters=document.querySelector('#filters');
-const norm=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-const cleanSize=value=>String(value).replace(/^[Øø]\s*/,'').trim();
-const mode=new URLSearchParams(location.search).get('catalog')==='bars'||document.querySelector('.header-label')?.textContent.includes('BARS')?'bars':'restaurant';
+const $=selector=>document.querySelector(selector);
+const norm=value=>String(value||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const mode=(new URLSearchParams(location.search).get('catalog')||document.body.dataset.catalog)==='bars'?'bars':'restaurant';
+const COPY={
+ restaurant:{eyebrow:'KATALOG RESTAURANT',title:'Pajisje profesionale për kuzhinën tuaj',doc:'Reka Horeca — Katalogu i produkteve'},
+ bars:{eyebrow:'KATALOG BARS',title:'Pajisje profesionale për barin tuaj',doc:'Reka Horeca — Katalogu Bars i produkteve'}
+}[mode];
 
-function classifyImage(image,card){
- image.classList.add('loaded');
- const ratio=image.naturalWidth/image.naturalHeight;
- card.dataset.imageShape=ratio>1.35?'wide':ratio<.72?'tall':'balanced';
+let products=[],category='',style='slate';
+const selections=new Map(),nodes=new Map();
+const sheet=$('#sheet'),host=$('#products'),filters=$('#filters'),search=$('#search');
+
+const reveal='IntersectionObserver' in window?new IntersectionObserver(entries=>{for(const entry of entries)if(entry.isIntersecting){entry.target.classList.add('in');reveal.unobserve(entry.target)}},{rootMargin:'0px 0px -6% 0px'}):null;
+const selectionOf=product=>{if(!selections.has(product.id))selections.set(product.id,initialSelection(product));return selections.get(product.id)};
+
+function cardFor(product,eager=false){
+ const card=createCard(product,{style,selection:selectionOf(product),eager,onOpen:openSheet});
+ nodes.set(product.id,card);
+ if(reveal){card.classList.add('reveal');reveal.observe(card)}
+ return card;
 }
 
 function render(){
- const query=norm(document.querySelector('#search').value.trim());
- const shown=products.filter(product=>(category==='Të gjitha'||category===product.category)&&norm(product.name+' '+product.description+' '+product.category+' '+product.variants.join(' ')).includes(query));
- grid.replaceChildren();document.querySelector('#count').textContent=shown.length+' produkte';document.querySelector('#empty').hidden=!!shown.length;
- shown.forEach((product,index)=>{
-  const style={slate:'slate',ornate:'ornate',classic:'classic',standard:'slate',compact:'slate',poster:'slate',minimal:'classic'}[window.catalogCardStyle]||'slate';
-  const card=element('article','','card '+style),picture=element('div','','product-image'),image=element('img');
-  card.dataset.title=product.name.length>31?'long':product.name.length<17?'short':'normal';
-  card.dataset.options=String(Number(Boolean(product.variants.length))+Number(Boolean(product.colors.length)));
-  image.src=imageURL(product.image);image.alt=product.name;image.decoding='async';
-  if(index<4){image.loading='eager';image.fetchPriority='high'}else{image.loading='lazy';image.fetchPriority='low'}
-  image.onload=()=>classifyImage(image,card);if(image.complete&&image.naturalWidth)classifyImage(image,card);
-  picture.append(image);
-  const content=element('div','','card-body');content.append(element('p',product.category,'card-category'),element('h3',product.name));
-  if(product.description){const more=element('details','','product-description');more.append(element('summary','Përshkrimi'),element('p',product.description));content.append(more)}
-  const variants=element('div','','variant'),state=selected.get(product.id)||{variant:cleanSize(product.variants[0]||''),color:product.colors[0]||''};selected.set(product.id,state);
-  const order=element('a','','order');order.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.1 10.1a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 1.9-1.4L20.5 8H7M10 20a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm9 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/></svg><span>Porosit</span>';order.target='_blank';order.rel='noopener';
-  function update(){const detail=[product.name,product.note,state.variant,state.color].filter(Boolean).join(' · ');order.href='https://wa.me/355694050377?text='+encodeURIComponent('Përshëndetje Reka Horeca! Dëshiroj të porosis: '+detail+'. Ju lutem më informoni për çmimin dhe disponueshmërinë. Faleminderit!');order.setAttribute('aria-label','Porosit '+detail+' në WhatsApp')}
-  function select(options,label,key){if(!options.length)return;const field=element('label',label,'variant-label'),select=element('select');select.setAttribute('aria-label',label+' — '+product.name);for(const option of options){const value=key==='variant'?cleanSize(option):option,item=new Option(value,value);item.selected=value===state[key];select.add(item)}select.onchange=()=>{state[key]=select.value;update()};field.append(select);variants.append(field)}
-  select(product.variants,'Përmasa','variant');select(product.colors,'Ngjyra','color');if(product.note)variants.prepend(element('p',product.note,'variant-note'));
-  update();content.append(variants,order);card.append(picture,content);grid.append(card);
- });
+ const query=norm(search.value.trim());
+ const shown=products.filter(product=>(!category||category===product.category)&&norm(product.name+' '+product.description+' '+product.category+' '+product.variants.join(' ')+' '+noteOf(product)).includes(query));
+ const grouped=!category&&!query,groups=new Map();
+ for(const product of shown){const key=grouped?product.category:'';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(product)}
+ host.replaceChildren();nodes.clear();
+ let index=0;
+ for(const [name,items] of groups){
+  const block=element('section','','cat-block'),grid=element('div','','grid');
+  if(name){const head=element('div','','cat-head');head.append(element('h2',name),element('span',String(items.length)));block.append(head)}
+  for(const product of items)grid.append(cardFor(product,index++<4));
+  block.append(grid);host.append(block);
+ }
+ $('#count').textContent=shown.length+' produkte';$('#clear').hidden=!search.value;
+ $('#empty').hidden=!!shown.length;
+ if(!shown.length)showEmpty('Nuk u gjet asnjë produkt.','Provoni një emër tjetër ose shfaqni të gjitha kategoritë.','Pastro kërkimin',resetFilters);
 }
 
-document.querySelector('#search').oninput=render;
-document.querySelector('#reset').onclick=()=>{document.querySelector('#search').value='';filters.firstElementChild.click()};
+function showEmpty(title,text,action,handler){
+ const box=$('#empty');box.hidden=false;box.replaceChildren();
+ box.insertAdjacentHTML('afterbegin',RekaLoader.cat.replace('class="cat"','class="cat still"'));
+ const button=element('button',action,'btn');button.type='button';button.onclick=handler;
+ box.append(element('h3',title),element('p',text),button);
+}
+
+function resetFilters(){search.value='';setCategory('')}
+function setCategory(name){category=name;for(const button of filters.children)button.setAttribute('aria-pressed',String(button.dataset.name===name));render()}
+
+function openSheet(product){
+ const selection=selectionOf(product);
+ const close=element('button','×','sheet-close');close.type='button';close.setAttribute('aria-label','Mbyll');close.onclick=()=>sheet.close();
+ const picture=element('div','','sheet-image'),image=element('img');image.src=imageURL(product.image);image.alt=product.name;picture.append(image,close);
+ const order=element('a','','order');order.target='_blank';order.rel='noopener';order.append(element('span','Porosit në WhatsApp'));
+ const update=()=>{order.href=orderURL(product,selection)};update();
+ const body=element('div','','sheet-body');
+ body.append(element('p',product.category,'sheet-cat'),element('h2',product.name));
+ if(noteOf(product))body.append(element('p',noteOf(product),'sheet-note'));
+ if(product.description)body.append(element('p',product.description,'sheet-desc'));
+ body.append(buildOptions(product,selection,update),order);
+ const inner=element('div','','sheet-inner');inner.append(picture,body);
+ sheet.replaceChildren(inner);sheet.showModal();
+ sheet.onclose=()=>{const old=nodes.get(product.id);if(old)old.replaceWith(cardFor(product))};
+}
+sheet.addEventListener('click',event=>{if(event.target===sheet)sheet.close()});
+
+search.oninput=render;
+$('#clear').onclick=()=>{search.value='';search.focus();render()};
+for(const link of document.querySelectorAll('[data-wa]'))link.href=waHref('Përshëndetje Reka Horeca! Dua informacion për produktet.');
+addEventListener('scroll',()=>$('#fab').classList.toggle('show',scrollY>520),{passive:true});
+
+const waitFor=image=>image.decode().catch(()=>{});
 
 try{
- const catalog=await loadCatalog(mode);applyTheme(catalog.theme);window.catalogCardStyle=catalog.cardStyle||'slate';
- if(mode==='bars'){document.title='Reka Horeca — Katalogu Bars i produkteve';document.querySelector('.header-label').textContent='KATALOG BARS';document.querySelector('.section-top h1').innerHTML='Katalogu Bars i produkteve<span>.</span>'}
+ const catalog=await loadCatalog(mode);
+ applyTheme(catalog.theme);style=cardStyleName(catalog.cardStyle);
+ document.title=COPY.doc;$('#eyebrow').textContent=COPY.eyebrow;$('#title').innerHTML=COPY.title+'<span>.</span>';
  products=catalog.products.filter(product=>product.visible).sort((a,b)=>b.priority-a.priority);
- for(const name of ['Të gjitha',...new Set(products.map(product=>product.category))]){const button=element('button',name);button.type='button';button.setAttribute('aria-pressed',name===category);button.onclick=()=>{category=name;for(const item of filters.children)item.setAttribute('aria-pressed',item===button);render()};filters.append(button)}
+ const names=[...new Set(products.map(product=>product.category))];
+ for(const name of ['',...names]){
+  const button=element('button','','');button.type='button';button.dataset.name=name;button.setAttribute('aria-pressed',String(name===category));
+  button.append(name||'Të gjitha',element('small',String(name?products.filter(product=>product.category===name).length:products.length)));
+  button.onclick=()=>{setCategory(name);scrollTo({top:Math.max(0,$('#katalogu').offsetTop-1),behavior:'smooth'})};
+  filters.append(button);
+ }
+ $('#stat-products').textContent=products.length;$('#stat-cats').textContent=names.length;
+ const art=$('#hero-art');for(const product of products.filter(item=>item.image).slice(0,3)){const image=element('img');image.src=imageURL(product.image);image.alt='';art.append(image)}
  render();
-}catch(error){console.error(error);document.querySelector('#count').textContent='Katalogu nuk u ngarkua. Rifreskoni faqen.'}
+ // Hold the cat until the first row of photos is in, but never longer than 2.5 s.
+ await Promise.race([Promise.all([...host.querySelectorAll('img')].slice(0,4).map(waitFor)),new Promise(done=>setTimeout(done,2500))]);
+}catch(error){
+ console.error(error);$('#count').textContent='';
+ showEmpty('Katalogu nuk u ngarkua.','Kontrolloni lidhjen me internetin dhe provoni përsëri.','Provo përsëri',()=>location.reload());
+}
+RekaLoader.hide(900);
