@@ -5,8 +5,8 @@ const $=selector=>document.querySelector(selector);
 const norm=value=>String(value||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
 const mode=(new URLSearchParams(location.search).get('catalog')||document.body.dataset.catalog)==='bars'?'bars':'restaurant';
 const COPY={
- restaurant:{eyebrow:'KATALOG RESTAURANT',title:'Pajisje profesionale për kuzhinën tuaj',doc:'Reka Horeca — Katalogu i produkteve'},
- bars:{eyebrow:'KATALOG BARS',title:'Pajisje profesionale për barin tuaj',doc:'Reka Horeca — Katalogu Bars i produkteve'}
+ restaurant:{title:'Pajisje profesionale për kuzhinën tuaj',doc:'Reka Horeca — Katalogu i produkteve'},
+ bars:{title:'Pajisje profesionale për barin tuaj',doc:'Reka Horeca — Katalogu Bars i produkteve'}
 }[mode];
 
 let products=[],category='',style='slate';
@@ -49,9 +49,9 @@ function showEmpty(title,text,action,handler){
  box.append(element('h3',title),element('p',text),button);
 }
 
-// Spotlight: products flagged "featured" in the CMS (max 6); otherwise the top 4 by priority.
+// Spotlight: products flagged "featured" in the CMS (max 4); otherwise the top 4 by priority.
 function renderSpotlight(){
- const row=$('#spot'),featured=products.filter(product=>product.featured).slice(0,6),picks=featured.length?featured:products.slice(0,4);
+ const row=$('#spot'),featured=products.filter(product=>product.featured).slice(0,4),picks=featured.length?featured:products.slice(0,4);
  row.replaceChildren();row.hidden=!picks.length;
  for(const product of picks){
   const card=element('button','','spot-card'),picture=element('span','','spot-img'),image=element('img');
@@ -74,7 +74,7 @@ function openSheet(product){
  body.append(element('p',product.category,'sheet-cat'),element('h2',product.name));
  if(noteOf(product))body.append(element('p',noteOf(product),'sheet-note'));
  if(product.description)body.append(element('p',product.description,'sheet-desc'));
- body.append(buildOptions(product,selection,update,{sheet:true}),order);
+ body.append(buildOptions(product,selection,update),order);
  const inner=element('div','','sheet-inner');inner.append(picture,body);
  sheet.replaceChildren(inner);sheet.showModal();
  sheet.onclose=()=>{const old=nodes.get(product.id);if(old)old.replaceWith(cardFor(product))};
@@ -91,7 +91,7 @@ const waitFor=image=>image.decode().catch(()=>{});
 try{
  const catalog=await loadCatalog(mode);
  applyTheme(catalog.theme);style=cardStyleName(catalog.cardStyle);
- document.title=COPY.doc;$('#eyebrow').textContent=COPY.eyebrow;$('#title').innerHTML=COPY.title+'<span>.</span>';
+ document.title=COPY.doc;$('#title').innerHTML=COPY.title+'<span>.</span>';
  products=catalog.products.filter(product=>product.visible).sort((a,b)=>b.priority-a.priority);
  const names=[...new Set(products.map(product=>product.category))];
  for(const name of ['',...names]){

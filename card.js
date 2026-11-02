@@ -16,9 +16,10 @@ export const orderURL=(product,selection)=>waHref('Përshëndetje Reka Horeca! D
 // Fades the right edge of a chip row only when it actually scrolls.
 const fits=new ResizeObserver(entries=>{for(const {target} of entries)target.classList.toggle('is-scroll',target.scrollWidth>target.clientWidth+1)});
 
-function options(label,values,selection,key,fallback,onChange){
+function options(label,values,selection,key,fallback,onChange,{compact=false}={}){
  const box=element('div','','opt'),list=element('div','','chips');
- box.append(element('span',label,'opt-label'),list);
+ if(!compact)box.append(element('span',label,'opt-label'));
+ box.append(list);
  if(!values.length){list.append(element('span',fallback,'chip static'));return box}
  list.setAttribute('role','radiogroup');list.setAttribute('aria-label',label);
  for(const value of values){
@@ -29,37 +30,37 @@ function options(label,values,selection,key,fallback,onChange){
  fits.observe(list);return box;
 }
 
-// Two rows (size + colors/blurb) so every card keeps the same height. The sheet passes sheet=true: it already shows the full description.
-export function buildOptions(product,selection,onChange,{sheet=false}={}){
+// Card (compact): one quiet row of size chips, so every card stays the same height and easy to scan.
+// Sheet (full): labelled sizes + colors.
+export function buildOptions(product,selection,onChange,{compact=false}={}){
  const box=element('div','','card-options');
- box.append(options('Përmasa',product.variants.map(cleanSize),selection,'variant','Standard',onChange));
- if(product.colors.length)box.append(options('Ngjyra',product.colors,selection,'color','',onChange));
- else if(!sheet)box.append(blurb(product));
+ box.append(options('Përmasa',product.variants.map(cleanSize),selection,'variant','Standard',onChange,{compact}));
+ if(!compact&&product.colors.length)box.append(options('Ngjyra',product.colors,selection,'color','',onChange));
  return box;
 }
 
-function blurb(product){
- const box=element('div','','opt'),text=product.description.trim();
- box.append(element('span',text?'Rreth produktit':'Detaje','opt-label'),element('p',text||'Pyesni në WhatsApp për këtë produkt.','opt-text'));
- return box;
-}
+const subtitle=product=>[noteOf(product),product.colors.length?product.colors.length+' ngjyra':''].filter(Boolean).join(' · ');
 
 export function createCard(product,{style='slate',selection=initialSelection(product),eager=false,onOpen,onSelect}={}){
  const card=element('article','','card '+style),picture=element('div','','product-image'),image=element('img'),body=element('div','','card-body');
- card.dataset.title=product.name.length>26?'long':'normal';
+ card.dataset.title=product.name.length>20?'long':'normal';
  image.src=imageURL(product.image);image.alt=product.name;image.decoding='async';
  image.loading=eager?'eager':'lazy';
  const ready=()=>{image.classList.add('loaded');picture.classList.add('ready')};
  image.onload=ready;image.onerror=()=>picture.classList.add('ready');
  if(image.complete&&image.naturalWidth)ready();
  picture.append(image);
- if(onOpen){
-  const more=element('button','+','quick');more.type='button';more.setAttribute('aria-label','Shiko detajet: '+product.name);
-  more.onclick=()=>onOpen(product);picture.append(more);
- }
  const title=element('h3',product.name);title.title=product.name;
- const order=element('a','','order');order.innerHTML=ORDER_ICON+'<span>Porosit</span>';order.target='_blank';order.rel='noopener';
+ const order=element('a','','order'),label=element('span',product.colors.length&&onOpen?'Zgjidh ngjyrën':'Porosit');
+ order.innerHTML=ORDER_ICON;order.append(label);order.target='_blank';order.rel='noopener';
  const update=()=>{order.href=orderURL(product,selection);order.setAttribute('aria-label','Porosit '+orderDetail(product,selection)+' në WhatsApp')};
- body.append(title,element('p',noteOf(product),'card-note'),buildOptions(product,selection,()=>{update();onSelect?.()}),order);
+ // Image and title open the full view; products with colors send the order button there too, since the color is picked in the full view.
+ if(onOpen){
+  picture.classList.add('is-link');picture.tabIndex=0;picture.setAttribute('role','button');picture.setAttribute('aria-label','Shiko detajet: '+product.name);
+  picture.onclick=()=>onOpen(product);picture.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();onOpen(product)}};
+  title.classList.add('is-link');title.onclick=()=>onOpen(product);
+  if(product.colors.length)order.onclick=event=>{event.preventDefault();onOpen(product)};
+ }
+ body.append(title,element('p',subtitle(product),'card-note'),buildOptions(product,selection,()=>{update();onSelect?.()},{compact:true}),order);
  update();card.append(picture,body);return card;
 }
