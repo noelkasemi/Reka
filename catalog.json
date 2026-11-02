@@ -1,6 +1,6 @@
 {
   "revision": 0,
-  "cardStyle": "poster",
+  "cardStyle": "slate",
   "theme": {"green":"#183b38","cream":"#f3eee4","ink":"#203b38","gold":"#c89455","card":"#fffdf8","image":"#ffffff","border":"#cbd2cd","button":"#183b38","buttonText":"#ffffff"},
   "products": [
     {"id":"bars-01","category":"Bar","name":"Thikë qërues 9 cm","image":"assets/bars/p02-01.png","variants":["9 cm"],"colors":[],"description":"Thikë profesionale për përgatitjen e garniturave dhe frutave.","note":"Pajisje bari","priority":90,"visible":true},
