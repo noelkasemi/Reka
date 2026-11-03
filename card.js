@@ -5,6 +5,8 @@ export const PHONE='355694050377';
 const GENERIC_NOTE=/^sipas katalogut$/i;
 const ORDER_ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.1 10.1a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 1.9-1.4L20.5 8H7M10 20a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm9 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/></svg>';
 
+// Category order on the page: the catalogue's own list first (skipping categories with no visible product), then the rest in product order.
+export const categoryNames=(catalog,products)=>{const present=new Set(products.map(product=>product.category)),listed=[...new Set((catalog?.categories||[]).filter(name=>present.has(name)))];return [...listed,...[...present].filter(name=>!listed.includes(name))]};
 export const cleanSize=value=>String(value).replace(/^[Øø]\s*/,'').trim();
 export const noteOf=product=>GENERIC_NOTE.test(product.note||'')?'':(product.note||'');
 export const waHref=text=>'https://wa.me/'+PHONE+'?text='+encodeURIComponent(text);

@@ -1,7 +1,7 @@
 // "Galeri" page design: an alternative to the classic catalog layout. Same catalog.json (products, sizes, colors, featured, order),
 // so everything the CMS edits keeps working. Restaurants get the light "Atelier" skin, bars the dark "Nocturne" skin; the palette is editable.
 import {element,imageURL,sharedSlug} from './theme.js';
-import {cleanSize,noteOf,initialSelection,orderDetail,orderURL,waHref,PHONE} from './card.js';
+import {categoryNames,cleanSize,noteOf,initialSelection,orderDetail,orderURL,waHref,PHONE} from './card.js';
 
 export const GALLERY_KEYS=['gBg','gTile','gInk','gMuted','gAccent','gAccentText','gDark','gDarkText','gLine'];
 export const GALLERY_DEFAULTS={
@@ -130,7 +130,7 @@ export async function startGallery(catalog,mode){
  if(!picks.length)stage.hidden=true;
 
  // Bars skin: a slow ticker of the category names under the hero
- const names=[...new Set(products.map(product=>product.category))];
+ const names=categoryNames(catalog,products);
  const ticker=E('div','g-ticker',E('div','',...[0,1].flatMap(()=>names.map(name=>E('span','',name,E('i','','✦'))))));ticker.setAttribute('aria-hidden','true');
 
  // Search + categories
@@ -163,7 +163,7 @@ export async function startGallery(catalog,mode){
   const q=norm(query.trim());
   shown=products.filter(product=>(!category||category===product.category)&&norm(product.name+' '+product.description+' '+product.category+' '+product.variants.join(' ')+' '+noteOf(product)).includes(q));
   const grouped=!category&&!q,groups=new Map();
-  for(const product of shown){const key=grouped?product.category:'';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(product)}
+  if(grouped)for(const name of names)groups.set(name,[]);for(const product of shown){const key=grouped?product.category:'';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(product)}for(const [key,items] of groups)if(!items.length)groups.delete(key);
   host.replaceChildren();let index=0;
   for(const [name,items] of groups){
    const block=E('section','g-block'),grid=E('div','g-grid');
