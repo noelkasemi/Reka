@@ -1,0 +1,65 @@
+/* Product cards: three shapes (slate arch, ornate notched frame, classic) sharing one structure. Mobile-first. */
+.grid,.mock-grid{container-type:inline-size}
+.card{position:relative;display:flex;flex-direction:column;min-width:0;font-family:Georgia,'Times New Roman',serif;-webkit-tap-highlight-color:transparent}
+.card *{font-family:inherit}
+.product-image{position:relative;display:flex;align-items:center;justify-content:center;background:none}
+.product-image img{width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .3s ease}
+.product-image img.loaded{opacity:1}
+.product-image:not(.ready)::before{content:"";position:absolute;inset:14% 18%;border-radius:18px;background:linear-gradient(100deg,#0000 20%,#ffffff55 50%,#0000 80%) 0 0/220% 100%,#8883;animation:card-shimmer 1.3s linear infinite}
+.card-body{display:flex;flex:1;flex-direction:column;min-width:0}
+.card h3{margin:0;font-weight:700;font-size:14px;line-height:1.2;letter-spacing:.01em;text-transform:uppercase;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;min-height:2.4em}
+.card[data-title=long] h3{font-size:12.5px}
+.card-note{margin:4px 0 0;min-height:1.3em;font:400 11.5px/1.3 Arial,Helvetica,sans-serif;opacity:.78;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-options{margin-top:auto;padding-top:12px;display:grid;gap:10px}
+.order{display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;margin-top:12px;border-radius:10px;font:700 14px/1 Arial,Helvetica,sans-serif;text-decoration:none;transition:transform .15s,filter .15s,box-shadow .15s}
+.order span{font-family:Arial,Helvetica,sans-serif}
+.order:hover{transform:translateY(-1px);filter:brightness(1.07)}.order:active{transform:scale(.98)}
+.order svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.is-link{cursor:pointer}
+.product-image.is-link img{transition:opacity .3s ease,transform .3s ease}.product-image.is-link:hover img{transform:scale(1.04)}
+.product-image.is-link:focus-visible{outline:3px solid var(--gold);outline-offset:-3px}
+
+/* Option chips (replace raw dropdowns). Colors come from the card style / sheet via --chip-* */
+.opt{display:grid;gap:5px;min-width:0}
+.opt-label{font:700 9.5px/1 Arial,Helvetica,sans-serif;letter-spacing:.14em;text-transform:uppercase;opacity:.72}
+.chips{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;padding:2px;margin:0 -2px}
+.chips::-webkit-scrollbar{display:none}
+.chips.is-scroll{-webkit-mask:linear-gradient(90deg,#000 calc(100% - 22px),#0000);mask:linear-gradient(90deg,#000 calc(100% - 22px),#0000)}
+.chip{flex:none;scroll-snap-align:start;min-height:34px;padding:0 12px;border:1px solid var(--chip-line);border-radius:999px;background:var(--chip-bg);color:var(--chip-text);font:700 12px/1 Arial,Helvetica,sans-serif;white-space:nowrap;cursor:pointer;transition:background .15s,color .15s,transform .1s}
+.chip:active{transform:scale(.95)}
+.chip[aria-checked=true]{background:var(--chip-on);border-color:var(--chip-on);color:var(--chip-on-text)}
+.chip.static{display:inline-flex;align-items:center;border-style:dashed;background:none;cursor:default;opacity:.8}
+.chip.static:active{transform:none}
+
+/* Slate: arched body, product overlaps the arch */
+.card.slate{--chip-bg:color-mix(in srgb,var(--slateText) 14%,transparent);--chip-line:color-mix(in srgb,var(--slateText) 38%,transparent);--chip-text:var(--slateText);--chip-on:var(--slateField);--chip-on-text:var(--slateFieldText)}
+.card.slate .product-image{height:150px;margin-bottom:-40px;z-index:2;align-items:flex-end;padding-bottom:8px}
+.card.slate .product-image img{filter:drop-shadow(0 8px 7px #0000003a)}
+.card.slate .card-body{padding:60px 12px 14px;background:var(--slateCard);color:var(--slateText);border-radius:50% 50% 16px 16px/48px 48px 16px 16px;box-shadow:0 14px 26px #102f2526;text-align:center}
+.card.slate .chips{justify-content:safe center}
+.card.slate .opt-label{text-align:center}
+.card.slate .order{background:var(--slateField);color:var(--slateFieldText)}
+
+/* Ornate: notched corners, framed image */
+.card.ornate{--cut:14px;--chip-bg:color-mix(in srgb,var(--ornateText) 8%,transparent);--chip-line:color-mix(in srgb,var(--ornateText) 35%,transparent);--chip-text:var(--ornateText);--chip-on:var(--ornateButton);--chip-on-text:var(--ornateButtonText);padding:8px;background:var(--ornateCard);color:var(--ornateText);-webkit-mask:radial-gradient(var(--cut) at 0 0,#0000 98%,#000) 0 0/51% 51% no-repeat,radial-gradient(var(--cut) at 100% 0,#0000 98%,#000) 100% 0/51% 51% no-repeat,radial-gradient(var(--cut) at 0 100%,#0000 98%,#000) 0 100%/51% 51% no-repeat,radial-gradient(var(--cut) at 100% 100%,#0000 98%,#000) 100% 100%/51% 51% no-repeat;mask:radial-gradient(var(--cut) at 0 0,#0000 98%,#000) 0 0/51% 51% no-repeat,radial-gradient(var(--cut) at 100% 0,#0000 98%,#000) 100% 0/51% 51% no-repeat,radial-gradient(var(--cut) at 0 100%,#0000 98%,#000) 0 100%/51% 51% no-repeat,radial-gradient(var(--cut) at 100% 100%,#0000 98%,#000) 100% 100%/51% 51% no-repeat}
+.card.ornate .product-image{--inner-cut:13px;height:140px;padding:8px;background:var(--ornateImage);overflow:hidden}
+.card.ornate .product-image:after{content:"";position:absolute;inset:-1px;z-index:2;pointer-events:none;background:radial-gradient(circle at 0 0,var(--ornateCard) 0 var(--inner-cut),transparent calc(var(--inner-cut) + 1px)),radial-gradient(circle at 100% 0,var(--ornateCard) 0 var(--inner-cut),transparent calc(var(--inner-cut) + 1px)),radial-gradient(circle at 0 100%,var(--ornateCard) 0 var(--inner-cut),transparent calc(var(--inner-cut) + 1px)),radial-gradient(circle at 100% 100%,var(--ornateCard) 0 var(--inner-cut),transparent calc(var(--inner-cut) + 1px))}
+.card.ornate .card-body{padding:12px 6px 6px}
+.card.ornate .order{background:var(--ornateButton);color:var(--ornateButtonText);border-radius:6px}
+
+/* Classic (Editorial): flat card, white image plate */
+.card.classic{--chip-bg:color-mix(in srgb,var(--classicText) 8%,transparent);--chip-line:color-mix(in srgb,var(--classicText) 35%,transparent);--chip-text:var(--classicText);--chip-on:var(--classicButton);--chip-on-text:var(--classicButtonText);padding:9px;background:var(--classicCard);color:var(--classicText)}
+.card.classic .product-image{height:140px;padding:8px;background:var(--classicImage)}
+.card.classic .card-body{padding:12px 3px 4px}
+.card.classic .order{background:var(--classicButton);color:var(--classicButtonText);border-radius:6px}
+
+@container (min-width:600px){
+ .card h3{font-size:19px}.card[data-title=long] h3{font-size:16px}.card-note{font-size:12.5px}
+ .opt-label{font-size:10px}.chip{font-size:12.5px}
+ .card.slate .product-image{height:230px;margin-bottom:-70px}
+ .card.slate .card-body{padding:96px 20px 20px;border-radius:50% 50% 20px 20px/72px 72px 20px 20px}
+ .card.ornate{--cut:20px;padding:12px}.card.ornate .product-image{--inner-cut:18px;height:200px;padding:10px}.card.ornate .card-body{padding:16px 10px 8px}
+ .card.classic{padding:14px}.card.classic .product-image{height:200px;padding:12px}.card.classic .card-body{padding:16px 6px 6px}
+}
+@keyframes card-shimmer{to{background-position:-120% 0}}
+@media(prefers-reduced-motion:reduce){.product-image:not(.ready)::before{animation:none}.product-image img{transition:none}}
