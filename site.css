@@ -21,10 +21,13 @@ a:focus-visible,button:focus-visible,input:focus-visible,.chip:focus-visible{out
 .mode-btn{display:grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid var(--border);border-radius:50%;background:transparent;color:var(--ink);cursor:pointer;transition:background .2s,transform .1s}
 .mode-btn:hover{background:color-mix(in srgb,var(--ink) 8%,transparent)}.mode-btn:active{transform:scale(.95)}
 .mode-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+/* Narrow phones: the header has one more button, so everything shrinks a little instead of overflowing */
+@media(max-width:400px){.top-actions{gap:6px}.mode-btn{width:40px;height:40px}.wa-pill{padding:0 12px;gap:6px}.logo img{height:19px}}
+@media(max-width:340px){.wa-pill{font-size:0;gap:0;padding:0;width:42px;justify-content:center}}
 /* Dark look: the header follows the palette (its light bar and dark logo are fixed colours otherwise); spotlight cards keep their white photo tile and dark text */
 html[data-look=dark] .top{background:var(--card)}
 html[data-look=dark] .top .logo img{filter:brightness(0) invert(1)}
-html[data-look=dark] .spot-card{color:#1c2f25}
+html[data-look=dark] .spot-card{color:#1c2f25;--muted:#5f6a5c}
 
 /* Spotlight band: a few featured products */
 .spot{position:relative;overflow:hidden;padding:20px 0 22px;color:var(--headerText);background:radial-gradient(110% 120% at 100% 0,color-mix(in srgb,var(--gold) 22%,transparent),transparent 60%),linear-gradient(165deg,var(--green),color-mix(in srgb,var(--green) 70%,#000))}

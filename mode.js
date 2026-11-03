@@ -25,9 +25,9 @@ function fromHsl(h,s,l){
 // hue of `ref` at lightness `l`, saturation scaled by `sat`
 const tint=(ref,l,sat=1)=>{const [h,s]=toHsl(ref);return fromHsl(h,Math.min(1,s*sat),l)};
 const lighten=(hex,minL)=>{const [h,s,l]=toHsl(hex);return l>=minL?hex:fromHsl(h,s,minL)};
-// moves fg's lightness away from bg until the pair reaches `min` contrast
+// moves fg's lightness towards whichever extreme (white or black) contrasts more with bg, until the pair reaches `min`. That extreme always gets there (both reach 4.58:1 at luminance .18)
 function fit(fg,bg,min){
- const [h,s,start]=toHsl(fg),step=luminance(bg)<.5?.02:-.02;let l=start;
+ const [h,s,start]=toHsl(fg),step=contrast('#000000',bg)>contrast('#ffffff',bg)?-.02:.02;let l=start;
  for(let i=0;i<60&&contrast(fromHsl(h,s,l),bg)<min;i++)l=Math.max(0,Math.min(1,l+step));
  return fromHsl(h,s,l);
 }

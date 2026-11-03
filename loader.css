@@ -38,6 +38,8 @@
 
 /* Brand loader (public sites): logo + thin sweeping line on the page background */
 #reka-loader.rl-brand{background:var(--cream,#f5f1e7)}
+html[data-look=dark] #reka-loader.rl-brand{background:#14110d}
+html[data-look=dark] .rl-logo{filter:brightness(0) invert(1)}
 .rl-brand .rl-box{gap:24px;padding:0}
 .rl-logo{display:block;width:min(300px,70vw);height:auto;animation:rl-breathe 2.6s ease-in-out infinite}
 .rl-line{position:relative;display:block;width:min(150px,40vw);height:2px;overflow:hidden;border-radius:2px;background:#b89a5238}
