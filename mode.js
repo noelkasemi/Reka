@@ -3,6 +3,8 @@
 
 // Mirrors GALLERY_DEFAULTS.restaurant in gallery.js: keep in sync.
 export const LIGHT_GALLERY={gBg:'#efeae0',gTile:'#f8f5ee',gInk:'#17251d',gMuted:'#686658',gAccent:'#8f5d12',gAccentText:'#ffffff',gDark:'#14251c',gDarkText:'#f5f0e2',gLine:'#d8d1c0'};
+// Mirrors themeDefaults in the CMS lib/products.mjs (a test checks it): keep in sync.
+export const LIGHT_CLASSIC={green:'#1b3326',headerText:'#f5f0e2',cream:'#f5f1e6',ink:'#1c2f25',muted:'#5f6a5c',gold:'#bf9d5e',footer:'#14251c',footerText:'#b4c0b0',card:'#fbf9f2',image:'#ffffff',border:'#d8d2bf',filter:'#ebe5d4',filterText:'#1c2f25',filterActive:'#1b3326',filterActiveText:'#f5f0e2',field:'#ffffff',fieldText:'#1c2f25',button:'#1b3326',buttonText:'#f5f0e2',slateCard:'#365343',slateText:'#f7f2e5',slateField:'#f7f2e5',slateFieldText:'#1b3326',ornateCard:'#d6dcc6',ornateText:'#1b3326',ornateImage:'#ffffff',ornateButton:'#1b3326',ornateButtonText:'#f5f0e2',classicCard:'#ebe4d0',classicText:'#1c2f25',classicImage:'#ffffff',classicButton:'#2d4a39',classicButtonText:'#f5f0e2'};
 
 const HEX=/^#[0-9a-f]{6}$/i;
 const rgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
@@ -44,6 +46,35 @@ export function darkGallery(theme){
   gDark,gDarkText:fit(tint(t.gDarkText,.92,.4),gDark,4.5),
   gLine:tint(t.gLine,.2,.4)
  };
+}
+
+// Klasik: every colour. Photo backgrounds (image, ornateImage, classicImage) never change. Buttons and the selected category use the lightened gold with dark text.
+export function darkClassic(theme){
+ const t=valid(LIGHT_CLASSIC,theme);
+ const page=tint(t.cream,.09,.55),card=tint(t.card,.13,.5),green=tint(t.green,.12,.8),footer=tint(t.footer,.06,.8);
+ const gold=fit(lighten(t.gold,.6),page,3),onGold=fit(tint(t.ink,.1,.5),gold,4.5);
+ const light=(ref,l,bg)=>fit(tint(ref,l,.4),bg,4.5);
+ const filter=tint(t.filter,.17,.5),field=tint(t.field,.16,.5),slateCard=tint(t.slateCard,.24,.6),ornateCard=tint(t.ornateCard,.17,.45),classicCard=tint(t.classicCard,.17,.45);
+ return {
+  green,headerText:light(t.headerText,.94,green),
+  cream:page,ink:fit(light(t.ink,.93,page),card,4.5),muted:fit(light(t.muted,.68,page),card,4.5),gold,
+  footer,footerText:light(t.footerText,.72,footer),
+  card,image:t.image,border:tint(t.border,.25,.4),
+  filter,filterText:light(t.filterText,.88,filter),filterActive:gold,filterActiveText:onGold,
+  field,fieldText:light(t.fieldText,.92,field),button:gold,buttonText:onGold,
+  slateCard,slateText:light(t.slateText,.95,slateCard),slateField:t.slateField,slateFieldText:fit(t.slateFieldText,t.slateField,4.5),
+  ornateCard,ornateText:light(t.ornateText,.92,ornateCard),ornateImage:t.ornateImage,ornateButton:gold,ornateButtonText:onGold,
+  classicCard,classicText:light(t.classicText,.92,classicCard),classicImage:t.classicImage,classicButton:gold,classicButtonText:onGold
+ };
+}
+
+// Which looks a page has. `own` is the palette the page really uses (Galeri passes its skin-aware palette); otherwise the catalogue's saved theme over the defaults.
+// A light page gets a generated dark look. A dark Galeri page keeps its own look and gets the light defaults. A dark Klasik page has no toggle.
+export function lookFor(catalog,layout,own){
+ const gallery=layout==='gallery',mine=valid(gallery?LIGHT_GALLERY:LIGHT_CLASSIC,own||catalog?.theme);
+ if(!isDarkBg(gallery?mine.gBg:mine.cream))return {base:'light',toggle:true,themes:{light:mine,dark:gallery?darkGallery(mine):darkClassic(mine)}};
+ if(gallery)return {base:'dark',toggle:true,themes:{light:LIGHT_GALLERY,dark:mine}};
+ return {base:'dark',toggle:false,themes:{light:mine,dark:mine}};
 }
 
 // The visitor's choice, kept in the browser. Storage can be blocked (private windows): every access is guarded.
