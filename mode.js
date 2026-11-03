@@ -84,8 +84,9 @@ export const saveChoice=(key,value)=>{if(!CHOICES.includes(value))return;try{loc
 
 // ---- The page's light/dark button (browser only; nothing runs at load) ----
 export const MODE_KEY='reka-color-mode';
-// The look to show: the visitor's saved choice, otherwise the catalogue's own look. The browser's own dark-mode setting is never used.
-export const currentLook=look=>readChoice(MODE_KEY)||look.base;
+// The look to show: the visitor's saved choice, otherwise the catalogue's own look. A page without a toggle (dark Klasik palette) always shows its own look.
+// The browser's own dark-mode setting is never used.
+export const currentLook=look=>look.toggle?readChoice(MODE_KEY)||look.base:look.base;
 export function applyLook(dark){
  const root=document.documentElement;root.dataset.look=dark?'dark':'light';root.style.colorScheme=dark?'dark':'light';
 }
