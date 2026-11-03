@@ -15,7 +15,9 @@ export const GALLERY_TEXTS={
 const HEX=/^#[0-9a-f]{6}$/i;
 const norm=value=>String(value||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
 const skinOf=mode=>mode==='bars'?'bars':'restaurant';
-export const galleryTheme=(theme,mode)=>({...GALLERY_DEFAULTS[skinOf(mode)],...Object.fromEntries(GALLERY_KEYS.filter(key=>HEX.test(theme?.[key])).map(key=>[key,theme[key]]))});
+// First restaurant defaults (before the contrast fix) that were saved into catalogs without being chosen by hand: treated as unset.
+const OLD_DEFAULTS={gAccent:'#a9701f',gMuted:'#6c6a5e'};
+export const galleryTheme=(theme,mode)=>({...GALLERY_DEFAULTS[skinOf(mode)],...Object.fromEntries(GALLERY_KEYS.filter(key=>HEX.test(theme?.[key])&&theme[key].toLowerCase()!==OLD_DEFAULTS[key]).map(key=>[key,theme[key]]))});
 export const galleryTexts=(catalog,mode)=>({...GALLERY_TEXTS[skinOf(mode)],...Object.fromEntries(['title','intro'].filter(key=>typeof catalog?.texts?.[key]==='string'&&catalog.texts[key].trim()).map(key=>[key,catalog.texts[key].trim()]))});
 const luminance=hex=>{const [r,g,b]=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255).map(c=>c<=.03928?c/12.92:((c+.055)/1.055)**2.4);return .2126*r+.7152*g+.0722*b};
 
