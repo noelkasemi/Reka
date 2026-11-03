@@ -49,9 +49,9 @@ function showEmpty(title,text,action,handler){
  box.append(element('h3',title),element('p',text),button);
 }
 
-// Spotlight: products flagged "featured" in the CMS (max 4); otherwise the top 4 by priority.
+// Spotlight: products marked featured in the CMS (max 4), topped up with the highest-priority products so the grid is always full.
 function renderSpotlight(){
- const row=$('#spot'),featured=products.filter(product=>product.featured).slice(0,4),picks=featured.length?featured:products.slice(0,4);
+ const row=$('#spot'),featured=products.filter(product=>product.featured).slice(0,4),picks=[...featured,...products.filter(product=>!featured.includes(product))].slice(0,4);
  row.replaceChildren();row.hidden=!picks.length;
  for(const product of picks){
   const card=element('button','','spot-card'),picture=element('span','','spot-img'),image=element('img');
