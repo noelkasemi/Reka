@@ -24,7 +24,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.chip:focus-visible{out
 .spot h1{margin:0;font:normal clamp(23px,6.6vw,34px)/1.12 Georgia,serif;letter-spacing:-.01em}
 .spot h1 span{color:var(--gold)}
 .spot-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.spot-card{display:flex;align-items:center;gap:10px;min-width:0;padding:8px 10px 8px 8px;border:0;border-radius:14px;background:#fff;color:#183a2e;text-align:left;cursor:pointer;box-shadow:0 8px 18px #0000003d;transition:transform .2s}
+.spot-card{display:flex;align-items:center;gap:10px;min-width:0;padding:8px 10px 8px 8px;border:0;border-radius:14px;background:#fff;color:var(--ink);text-align:left;cursor:pointer;box-shadow:0 8px 18px #0000003d;transition:transform .2s}
 .spot-card:hover{transform:translateY(-2px)}.spot-card:active{transform:scale(.98)}
 .spot-img{display:grid;place-items:center;flex:none;width:56px;height:56px}
 .spot-img img{max-width:100%;max-height:100%;object-fit:contain}
@@ -106,7 +106,7 @@ footer{padding:30px 0 calc(30px + env(safe-area-inset-bottom));background:var(--
 @media(min-width:1000px){
  .spot-in{grid-template-columns:minmax(260px,340px) minmax(0,1fr);align-items:center;gap:48px}
  .spot-row{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
- .spot-card{flex-direction:column;align-items:stretch;gap:10px;padding:10px 12px 14px}.spot-img{width:auto;height:140px}.spot-name{font-size:14px;-webkit-line-clamp:2;min-height:2.5em}.spot-cta{display:block;font-size:11px;font-weight:700;letter-spacing:.04em;color:#6c5a2a}
+ .spot-card{flex-direction:column;align-items:stretch;gap:10px;padding:10px 12px 14px}.spot-img{width:auto;height:140px}.spot-name{font-size:14px;-webkit-line-clamp:2;min-height:2.5em}.spot-cta{display:block;font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--muted)}
  .grid{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
 @keyframes sheet-in{from{transform:translateY(40px);opacity:0}}
