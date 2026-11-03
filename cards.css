@@ -35,6 +35,8 @@
 .card.slate{--chip-bg:color-mix(in srgb,var(--slateText) 14%,transparent);--chip-line:color-mix(in srgb,var(--slateText) 38%,transparent);--chip-text:var(--slateText);--chip-on:var(--slateField);--chip-on-text:var(--slateFieldText)}
 .card.slate .product-image{height:150px;margin-bottom:-40px;z-index:2;align-items:flex-end;padding-bottom:8px}
 .card.slate .product-image img{filter:drop-shadow(0 8px 7px #0000003a)}
+/* Dark look: the slate style floats the photo on the page, so give it the light photo tile the other styles have (dark products and white-background photos stay visible) */
+html[data-look=dark] .card.slate .product-image{background:var(--image);border-radius:16px}
 .card.slate .card-body{padding:60px 12px 14px;background:var(--slateCard);color:var(--slateText);border-radius:50% 50% 16px 16px/48px 48px 16px 16px;box-shadow:0 14px 26px #102f2526;text-align:center}
 .card.slate .chips{justify-content:safe center}
 .card.slate .opt-label{text-align:center}

@@ -29,6 +29,12 @@ html{scroll-behavior:smooth}
 .g-wa,.g-pill{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:0 15px;border-radius:99px;font:600 14px var(--body);transition:transform .15s,background .2s}
 .g-wa{box-shadow:inset 0 0 0 1.5px var(--gLine)}
 .g-wa span:last-child{display:none}
+.g .mode-btn{display:grid;place-items:center;width:42px;height:42px;padding:0;border:0;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--gLine);background:transparent;color:var(--gInk);cursor:pointer;transition:transform .15s,background .2s}
+.g .mode-btn:hover{background:color-mix(in srgb,var(--gInk) 8%,transparent)}.g .mode-btn:active{transform:scale(.95)}
+/* Narrow phones: the header now has one more button, so the buttons get smaller and the logo keeps some air */
+@media(max-width:420px){.g-top-actions{gap:6px}.g .mode-btn{width:38px;height:38px}.g-wa,.g-pill{min-height:38px;padding:0 12px}.g-logo{margin-right:8px}}
+@media(max-width:360px){.g-logo{flex-shrink:0;margin-right:0}.g-logo img{height:18px}.g-top-actions{gap:4px}.g-wa,.g-pill{padding:0 10px}.g-pill>span{display:none}}
+.g .mode-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .g-pill{background:var(--gInk);color:var(--gBg);white-space:nowrap}
 .g-pill>span:not(.g-ico){display:none}
 .g-pill b{min-width:22px;height:22px;padding:0 6px;border-radius:99px;display:grid;place-items:center;background:var(--gAccent);color:var(--gAccentText);font-size:12px}

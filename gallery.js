@@ -1,6 +1,7 @@
 // "Galeri" page design: an alternative to the classic catalog layout. Same catalog.json (products, sizes, colors, featured, order),
 // so everything the CMS edits keeps working. Restaurants get the light "Atelier" skin, bars the dark "Nocturne" skin; the palette is editable.
 import {element,imageURL,sharedSlug} from './theme.js';
+import {applyLook,currentLook,lookFor,modeButton,saveChoice,MODE_KEY} from './mode.js';
 import {categoryNames,cleanSize,noteOf,initialSelection,orderDetail,orderURL,waHref,PHONE} from './card.js';
 
 export const GALLERY_KEYS=['gBg','gTile','gInk','gMuted','gAccent','gAccentText','gDark','gDarkText','gLine'];
@@ -104,12 +105,15 @@ export async function startGallery(catalog,mode){
  document.title=catalog.name?catalog.name+' — Reka Horeca':'Reka Horeca — '+(mode==='bars'?'Katalogu Bars':'Katalogu i produkteve');
 
  const root=E('div','g');document.body.className='';document.body.removeAttribute('style');document.body.replaceChildren(root);
- const colors=paintGallery(root,catalog.theme,mode);document.body.style.background=colors.gBg;document.querySelector('meta[name="theme-color"]')?.setAttribute('content',colors.gDark);
+ // Light or dark: the catalogue's own look unless the visitor chose otherwise (button in the header).
+ const look=lookFor(catalog,'gallery',galleryTheme(catalog.theme,mode));
+ const paint=dark=>{const colors=paintGallery(root,look.themes[dark?'dark':'light'],mode);document.body.style.background=colors.gBg;document.querySelector('meta[name="theme-color"]')?.setAttribute('content',colors.gDark);applyLook(dark)};
+ const dark0=currentLook(look)==='dark';paint(dark0);
 
  const logo=()=>{const link=E('a','g-logo');link.href='#';link.setAttribute('aria-label','Reka Horeca, kreu');const image=element('img');image.src='assets/logo.png';image.alt='Reka Horeca';image.width=460;image.height=68;link.append(image);return link};
  const wa=E('a','g-wa',svg(ICON.chat),E('span','','WhatsApp'));wa.href=waHref('Përshëndetje Reka Horeca! Dua informacion për produktet.');wa.target='_blank';wa.rel='noopener';
  const listBtn=E('button','g-pill',svg(ICON.list),E('span','','Lista ime'),E('b','','0'));listBtn.type='button';
- const top=E('header','g-top',E('div','g-wrap g-top-in',logo(),E('div','g-top-actions',wa,listBtn)));
+ const top=E('header','g-top',E('div','g-wrap g-top-in',logo(),E('div','g-top-actions',...[look.toggle&&modeButton({dark:dark0,onToggle:dark=>{saveChoice(MODE_KEY,dark?'dark':'light');paint(dark)}}),wa,listBtn].filter(Boolean))));
 
  // Hero + rotating showcase of the chosen products
  const picks=spotlightOf(products);let pick=0,timer;

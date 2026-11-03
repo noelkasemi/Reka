@@ -81,3 +81,18 @@ export function lookFor(catalog,layout,own){
 const CHOICES=['dark','light'];
 export const readChoice=key=>{try{const value=localStorage.getItem(key);return CHOICES.includes(value)?value:null}catch{return null}};
 export const saveChoice=(key,value)=>{if(!CHOICES.includes(value))return;try{localStorage.setItem(key,value)}catch{}};
+
+// ---- The page's light/dark button (browser only; nothing runs at load) ----
+export const MODE_KEY='reka-color-mode';
+// The look to show: the visitor's saved choice, otherwise the catalogue's own look. The browser's own dark-mode setting is never used.
+export const currentLook=look=>readChoice(MODE_KEY)||look.base;
+export function applyLook(dark){
+ const root=document.documentElement;root.dataset.look=dark?'dark':'light';root.style.colorScheme=dark?'dark':'light';
+}
+const MOON='<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>',SUN='<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+export function modeButton({dark,onToggle}){
+ const button=document.createElement('button');button.type='button';button.className='mode-btn';button.title=button.ariaLabel='Pamja e errët';
+ const paint=()=>{button.setAttribute('aria-pressed',String(dark));button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'+(dark?SUN:MOON)+'</svg>'};
+ button.onclick=()=>{dark=!dark;paint();onToggle(dark)};paint();
+ return button;
+}

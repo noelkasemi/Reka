@@ -1,4 +1,5 @@
 import {applyTheme,element,loadCatalog,imageURL} from './theme.js';
+import {applyLook,currentLook,lookFor,modeButton,saveChoice,MODE_KEY} from './mode.js';
 import {buildOptions,cardStyleName,categoryNames,createCard,initialSelection,noteOf,orderURL,waHref} from './card.js';
 
 // Classic page design. app.js loads the catalog once and passes it in; mode is "restaurant" or "bars".
@@ -92,7 +93,10 @@ const waitFor=image=>image.decode().catch(()=>{});
 
 try{
  const catalog=preloaded||await loadCatalog(mode);
- applyTheme(catalog.theme);style=cardStyleName(catalog.cardStyle);
+ // Light or dark: the catalogue's own look unless the visitor chose otherwise (button in the header).
+ const look=lookFor(catalog,'classic'),paint=dark=>{applyTheme(look.themes[dark?'dark':'light']);applyLook(dark)},dark0=currentLook(look)==='dark';
+ paint(dark0);style=cardStyleName(catalog.cardStyle);
+ if(look.toggle){const wa=$('.wa-pill'),group=element('div','','top-actions');wa.replaceWith(group);group.append(modeButton({dark:dark0,onToggle:dark=>{saveChoice(MODE_KEY,dark?'dark':'light');paint(dark)}}),wa)}
  document.title=catalog.name?catalog.name+' — Reka Horeca':COPY.doc;$('#title').innerHTML=COPY.title+'<span>.</span>';
  products=catalog.products.filter(product=>product.visible).sort((a,b)=>b.priority-a.priority);
  const names=order=categoryNames(catalog,products);
