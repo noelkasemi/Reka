@@ -16,6 +16,15 @@ a:focus-visible,button:focus-visible,input:focus-visible,.chip:focus-visible{out
 .wa-pill{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:0 16px;border-radius:999px;background:var(--button);color:var(--buttonText);font-size:13px;font-weight:700;transition:filter .2s,transform .1s}
 .wa-pill:hover{filter:brightness(1.12)}.wa-pill:active{transform:scale(.97)}
 .wa-pill svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* Light/dark button (the visitor's choice) */
+.top-actions{display:flex;align-items:center;gap:10px}
+.mode-btn{display:grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid var(--border);border-radius:50%;background:transparent;color:var(--ink);cursor:pointer;transition:background .2s,transform .1s}
+.mode-btn:hover{background:color-mix(in srgb,var(--ink) 8%,transparent)}.mode-btn:active{transform:scale(.95)}
+.mode-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+/* Dark look: the header follows the palette (its light bar and dark logo are fixed colours otherwise); spotlight cards keep their white photo tile and dark text */
+html[data-look=dark] .top{background:var(--card)}
+html[data-look=dark] .top .logo img{filter:brightness(0) invert(1)}
+html[data-look=dark] .spot-card{color:#1c2f25}
 
 /* Spotlight band: a few featured products */
 .spot{position:relative;overflow:hidden;padding:20px 0 22px;color:var(--headerText);background:radial-gradient(110% 120% at 100% 0,color-mix(in srgb,var(--gold) 22%,transparent),transparent 60%),linear-gradient(165deg,var(--green),color-mix(in srgb,var(--green) 70%,#000))}
