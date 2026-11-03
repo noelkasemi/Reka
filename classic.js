@@ -93,7 +93,7 @@ const waitFor=image=>image.decode().catch(()=>{});
 try{
  const catalog=preloaded||await loadCatalog(mode);
  applyTheme(catalog.theme);style=cardStyleName(catalog.cardStyle);
- document.title=COPY.doc;$('#title').innerHTML=COPY.title+'<span>.</span>';
+ document.title=catalog.name?catalog.name+' — Reka Horeca':COPY.doc;$('#title').innerHTML=COPY.title+'<span>.</span>';
  products=catalog.products.filter(product=>product.visible).sort((a,b)=>b.priority-a.priority);
  const names=[...new Set(products.map(product=>product.category))];
  for(const name of ['',...names]){

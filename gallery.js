@@ -1,6 +1,6 @@
 // "Galeri" page design: an alternative to the classic catalog layout. Same catalog.json (products, sizes, colors, featured, order),
 // so everything the CMS edits keeps working. Restaurants get the light "Atelier" skin, bars the dark "Nocturne" skin; the palette is editable.
-import {element,imageURL} from './theme.js';
+import {element,imageURL,sharedSlug} from './theme.js';
 import {cleanSize,noteOf,initialSelection,orderDetail,orderURL,waHref,PHONE} from './card.js';
 
 export const GALLERY_KEYS=['gBg','gTile','gInk','gMuted','gAccent','gAccentText','gDark','gDarkText','gLine'];
@@ -98,10 +98,10 @@ export async function startGallery(catalog,mode){
  const products=catalog.products.filter(product=>product.visible).sort((a,b)=>b.priority-a.priority);
  const byId=new Map(products.map(product=>[product.id,product])),texts=galleryTexts(catalog,mode);
  const selections=new Map(),selectionOf=product=>{if(!selections.has(product.id))selections.set(product.id,initialSelection(product));return selections.get(product.id)};
- const KEY='reka-list-'+mode;let list=[];
+ const KEY='reka-list-'+(sharedSlug()||mode);let list=[];
  try{list=JSON.parse(localStorage.getItem(KEY)||'[]').filter(item=>byId.has(item.id));for(const item of list){const selection=selectionOf(byId.get(item.id));selection.variant=item.variant??selection.variant;selection.color=item.color??selection.color}list=list.map(item=>item.id)}catch{list=[]}
  let category='',query='',shown=products,sheetList=products,sheetIndex=0;
- document.title='Reka Horeca — '+(mode==='bars'?'Katalogu Bars':'Katalogu i produkteve');
+ document.title=catalog.name?catalog.name+' — Reka Horeca':'Reka Horeca — '+(mode==='bars'?'Katalogu Bars':'Katalogu i produkteve');
 
  const root=E('div','g');document.body.className='';document.body.removeAttribute('style');document.body.replaceChildren(root);
  const colors=paintGallery(root,catalog.theme,mode);document.body.style.background=colors.gBg;document.querySelector('meta[name="theme-color"]')?.setAttribute('content',colors.gDark);
