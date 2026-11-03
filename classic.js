@@ -1,5 +1,5 @@
 import {applyTheme,element,loadCatalog,imageURL} from './theme.js';
-import {buildOptions,cardStyleName,createCard,initialSelection,noteOf,orderURL,waHref} from './card.js';
+import {buildOptions,cardStyleName,categoryNames,createCard,initialSelection,noteOf,orderURL,waHref} from './card.js';
 
 // Classic page design. app.js loads the catalog once and passes it in; mode is "restaurant" or "bars".
 export async function startClassic(preloaded,mode){
@@ -11,7 +11,7 @@ const COPY={
  bars:{title:'Pajisje profesionale për barin tuaj',doc:'Reka Horeca — Katalogu Bars i produkteve'}
 }[mode];
 
-let products=[],category='',style='slate';
+let products=[],category='',style='slate',order=[];
 const selections=new Map(),nodes=new Map();
 const sheet=$('#sheet'),host=$('#products'),filters=$('#filters'),search=$('#search');
 
@@ -30,7 +30,7 @@ function render(){
  const query=norm(search.value.trim());
  const shown=products.filter(product=>(!category||category===product.category)&&norm(product.name+' '+product.description+' '+product.category+' '+product.variants.join(' ')+' '+noteOf(product)).includes(query));
  const grouped=!category&&!query,groups=new Map();
- for(const product of shown){const key=grouped?product.category:'';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(product)}
+ if(grouped)for(const name of order)groups.set(name,[]);for(const product of shown){const key=grouped?product.category:'';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(product)}for(const [key,items] of groups)if(!items.length)groups.delete(key);
  host.replaceChildren();nodes.clear();
  let index=0;
  for(const [name,items] of groups){
@@ -95,7 +95,7 @@ try{
  applyTheme(catalog.theme);style=cardStyleName(catalog.cardStyle);
  document.title=catalog.name?catalog.name+' — Reka Horeca':COPY.doc;$('#title').innerHTML=COPY.title+'<span>.</span>';
  products=catalog.products.filter(product=>product.visible).sort((a,b)=>b.priority-a.priority);
- const names=[...new Set(products.map(product=>product.category))];
+ const names=order=categoryNames(catalog,products);
  for(const name of ['',...names]){
   const button=element('button','','');button.type='button';button.dataset.name=name;button.setAttribute('aria-pressed',String(name===category));
   button.append(name||'Të gjitha',element('small',String(name?products.filter(product=>product.category===name).length:products.length)));
