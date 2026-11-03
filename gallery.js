@@ -5,7 +5,7 @@ import {cleanSize,noteOf,initialSelection,orderDetail,orderURL,waHref,PHONE} fro
 
 export const GALLERY_KEYS=['gBg','gTile','gInk','gMuted','gAccent','gAccentText','gDark','gDarkText','gLine'];
 export const GALLERY_DEFAULTS={
- restaurant:{gBg:'#efeae0',gTile:'#f8f5ee',gInk:'#17251d',gMuted:'#6c6a5e',gAccent:'#a9701f',gAccentText:'#ffffff',gDark:'#14251c',gDarkText:'#f5f0e2',gLine:'#d8d1c0'},
+ restaurant:{gBg:'#efeae0',gTile:'#f8f5ee',gInk:'#17251d',gMuted:'#686658',gAccent:'#8f5d12',gAccentText:'#ffffff',gDark:'#14251c',gDarkText:'#f5f0e2',gLine:'#d8d1c0'},
  bars:{gBg:'#0e1514',gTile:'#eceee8',gInk:'#f0eee6',gMuted:'#97a39e',gAccent:'#e2a65a',gAccentText:'#1b1407',gDark:'#070b0a',gDarkText:'#f0eee6',gLine:'#26312e'}
 };
 export const GALLERY_TEXTS={
