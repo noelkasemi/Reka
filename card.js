@@ -1,7 +1,8 @@
 // Product card shared by the public catalog and the CMS preview, so what you see in the CMS is what customers get.
 import {element,imageURL} from './theme.js';
+import {BRANDS,waHref as brandWaHref,orderURL as brandOrderURL} from './brand.js';
 
-export const PHONE='355694050377';
+export const PHONE=BRANDS.reka.phone;
 const GENERIC_NOTE=/^sipas katalogut$/i;
 const ORDER_ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.1 10.1a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 1.9-1.4L20.5 8H7M10 20a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm9 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/></svg>';
 
@@ -9,11 +10,12 @@ const ORDER_ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.
 export const categoryNames=(catalog,products)=>{const present=new Set(products.map(product=>product.category)),listed=[...new Set((catalog?.categories||[]).filter(name=>present.has(name)))];return [...listed,...[...present].filter(name=>!listed.includes(name))]};
 export const cleanSize=value=>String(value).replace(/^[Øø]\s*/,'').trim();
 export const noteOf=product=>GENERIC_NOTE.test(product.note||'')?'':(product.note||'');
-export const waHref=text=>'https://wa.me/'+PHONE+'?text='+encodeURIComponent(text);
+// The business is Reka unless a profile is passed (brand.js has the profiles).
+export const waHref=(text,profile=BRANDS.reka)=>brandWaHref(profile,text);
 export const cardStyleName=style=>({slate:'slate',ornate:'ornate',classic:'classic',standard:'slate',compact:'slate',poster:'slate',minimal:'classic'})[style]||'slate';
 export const initialSelection=product=>({variant:cleanSize(product.variants[0]||''),color:product.colors[0]||''});
 export const orderDetail=(product,selection)=>[product.name,noteOf(product),selection.variant,selection.color].filter(Boolean).join(' · ');
-export const orderURL=(product,selection)=>waHref('Përshëndetje Reka Horeca! Dëshiroj të porosis: '+orderDetail(product,selection)+'. Faleminderit!');
+export const orderURL=(product,selection,profile=BRANDS.reka)=>brandOrderURL(profile,orderDetail(product,selection));
 
 // Fades the right edge of a chip row only when it actually scrolls.
 const fits=new ResizeObserver(entries=>{for(const {target} of entries)target.classList.toggle('is-scroll',target.scrollWidth>target.clientWidth+1)});
@@ -43,7 +45,7 @@ export function buildOptions(product,selection,onChange,{compact=false}={}){
 
 const subtitle=product=>[noteOf(product),product.colors.length?product.colors.length+' ngjyra':''].filter(Boolean).join(' · ');
 
-export function createCard(product,{style='slate',selection=initialSelection(product),eager=false,onOpen,onSelect}={}){
+export function createCard(product,{style='slate',selection=initialSelection(product),eager=false,onOpen,onSelect,brand=BRANDS.reka}={}){
  const card=element('article','','card '+style),picture=element('div','','product-image'),image=element('img'),body=element('div','','card-body');
  card.dataset.title=product.name.length>20?'long':'normal';
  image.src=imageURL(product.image);image.alt=product.name;image.decoding='async';
@@ -55,7 +57,7 @@ export function createCard(product,{style='slate',selection=initialSelection(pro
  const title=element('h3',product.name);title.title=product.name;
  const order=element('a','','order'),label=element('span',product.colors.length&&onOpen?'Zgjidh ngjyrën':'Porosit');
  order.innerHTML=ORDER_ICON;order.append(label);order.target='_blank';order.rel='noopener';
- const update=()=>{order.href=orderURL(product,selection);order.setAttribute('aria-label','Porosit '+orderDetail(product,selection)+' në WhatsApp')};
+ const update=()=>{order.href=orderURL(product,selection,brand);order.setAttribute('aria-label','Porosit '+orderDetail(product,selection)+' në WhatsApp')};
  // Image and title open the full view; products with colors send the order button there too, since the color is picked in the full view.
  if(onOpen){
   picture.classList.add('is-link');picture.tabIndex=0;picture.setAttribute('role','button');picture.setAttribute('aria-label','Shiko detajet: '+product.name);

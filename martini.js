@@ -2,6 +2,7 @@
 // Same catalog.json as the other designs. Pure logic lives in martini-core.js; this file is the DOM. Business details are fixed (see MARTINI).
 import {element,imageURL,sharedSlug} from './theme.js';
 import {applyLook,currentLook,lookFor,luminance,modeButton,saveChoice,MODE_KEY} from './mode.js';
+import {MARK_SVG} from './brand.js';
 import {MARTINI,MARTINI_DEFAULTS,MARTINI_PRESETS,MARTINI_TEXTS,martiniTheme,martiniTexts,martiniTokens,spotlightOf,searchProducts,categoryNames,groupByCategory,splitDescription,cleanSize,noteOf,orderLine,orderURL,listURL,generalURL,readList,saveList} from './martini-core.js';
 
 export {MARTINI_DEFAULTS,MARTINI_PRESETS,MARTINI_TEXTS,martiniTheme,martiniTexts};
@@ -32,7 +33,7 @@ const ICON={
  heart:'<path d="M12 20.5s-7.5-4.6-9.3-9.2C1.5 8 3.4 4.8 6.6 4.8c2 0 3.6 1.1 5.4 3.2 1.8-2.1 3.4-3.2 5.4-3.2 3.2 0 5.1 3.2 3.9 6.5-1.8 4.6-9.3 9.2-9.3 9.2z"/>',
  chat:'<path d="M4 5h16v11H9l-5 4z"/>',search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',list:'<path d="M5 7h14M5 12h14M5 17h9"/>',down:'<path d="M12 5v14M6 13l6 6 6-6"/>'
 };
-const markNode=()=>{const holder=element('span');holder.innerHTML='<svg class="m-mark" viewBox="0 0 48 52" aria-hidden="true"><path d="M24 2 44 13.5v25L24 50 4 38.5v-25z" stroke-width="3"/><path d="M12.5 35V18l6.5 8.5L25.5 18v17M31 18v17M38.5 18 31 26.5l7.5 8.5" stroke-width="3.2"/></svg>';return holder.firstChild};
+const markNode=()=>{const holder=element('span');holder.innerHTML=MARK_SVG;return holder.firstChild};
 const logo=()=>{const link=E('a','m-logo',markNode(),E('span','m-word','MARTINI',E('span','','&'),'K'));link.href='#';link.setAttribute('aria-label',MARTINI.name+', kreu');return link};
 const tear=()=>{const holder=element('span');holder.innerHTML='<svg class="m-tear" viewBox="0 0 1200 30" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30V14L40 8 80 17 120 9 160 15 200 6 240 14 280 8 320 17 360 10 400 16 440 7 480 14 520 9 560 17 600 8 640 15 680 11 720 17 760 8 800 14 840 7 880 16 920 10 960 17 1000 8 1040 14 1080 9 1120 16 1160 8 1200 13V30Z"/></svg>';return holder.firstChild};
 // The last two words of the title (the last one when it has fewer than three) are set in italic mint.

@@ -13,6 +13,14 @@ a:focus-visible,button:focus-visible,input:focus-visible,.chip:focus-visible{out
 .top .wrap{display:flex;align-items:center;justify-content:space-between;min-height:62px}
 .logo{display:block;line-height:0}
 .logo img{height:26px;width:auto;display:block}
+/* Martini&K logo (mark + wordmark) in place of the Reka image; colours follow the page palette */
+.logo.mk{display:flex;align-items:center;gap:9px;line-height:1;color:var(--ink)}
+.logo .m-mark{width:28px;height:30px;flex:none;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
+.logo .m-word{font:800 15px/1 Arial,Helvetica,sans-serif;letter-spacing:.09em;white-space:nowrap}
+.logo .m-word span{color:var(--gold)}
+.foot .logo.mk{color:var(--headerText)}
+@media(max-width:400px){.logo .m-mark{width:22px;height:24px}.logo .m-word{font-size:13px}}
+@media(min-width:720px){.logo .m-mark{width:32px;height:35px}.logo .m-word{font-size:17px}}
 .wa-pill{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:0 16px;border-radius:999px;background:var(--button);color:var(--buttonText);font-size:13px;font-weight:700;transition:filter .2s,transform .1s}
 .wa-pill:hover{filter:brightness(1.12)}.wa-pill:active{transform:scale(.97)}
 .wa-pill svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
