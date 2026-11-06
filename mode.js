@@ -4,6 +4,8 @@
 // Mirrors GALLERY_DEFAULTS.restaurant in gallery.js: keep in sync.
 export const LIGHT_GALLERY={gBg:'#efeae0',gTile:'#f8f5ee',gInk:'#17251d',gMuted:'#686658',gAccent:'#8f5d12',gAccentText:'#ffffff',gDark:'#14251c',gDarkText:'#f5f0e2',gLine:'#d8d1c0'};
 // Mirrors themeDefaults in the CMS lib/products.mjs (a test checks it): keep in sync.
+// Mirrors MARTINI_DEFAULTS in martini-core.js (a test checks it): keep in sync.
+export const LIGHT_MARTINI={gBg:'#F1E8D6',gTile:'#FFFFFF',gInk:'#1B2B22',gMuted:'#5E5B4A',gAccent:'#3BA67E',gAccentText:'#0B2419',gDark:'#15382B',gDarkText:'#F4EDE0',gLine:'#D8CCB2'};
 export const LIGHT_CLASSIC={green:'#1b3326',headerText:'#f5f0e2',cream:'#f5f1e6',ink:'#1c2f25',muted:'#5f6a5c',gold:'#bf9d5e',footer:'#14251c',footerText:'#b4c0b0',card:'#fbf9f2',image:'#ffffff',border:'#d8d2bf',filter:'#ebe5d4',filterText:'#1c2f25',filterActive:'#1b3326',filterActiveText:'#f5f0e2',field:'#ffffff',fieldText:'#1c2f25',button:'#1b3326',buttonText:'#f5f0e2',slateCard:'#365343',slateText:'#f7f2e5',slateField:'#f7f2e5',slateFieldText:'#1b3326',ornateCard:'#d6dcc6',ornateText:'#1b3326',ornateImage:'#ffffff',ornateButton:'#1b3326',ornateButtonText:'#f5f0e2',classicCard:'#ebe4d0',classicText:'#1c2f25',classicImage:'#ffffff',classicButton:'#2d4a39',classicButtonText:'#f5f0e2'};
 
 const HEX=/^#[0-9a-f]{6}$/i;
@@ -23,10 +25,10 @@ function fromHsl(h,s,l){
  return '#'+[r,g,b].map(v=>Math.round((v+m)*255).toString(16).padStart(2,'0')).join('');
 }
 // hue of `ref` at lightness `l`, saturation scaled by `sat`
-const tint=(ref,l,sat=1)=>{const [h,s]=toHsl(ref);return fromHsl(h,Math.min(1,s*sat),l)};
-const lighten=(hex,minL)=>{const [h,s,l]=toHsl(hex);return l>=minL?hex:fromHsl(h,s,minL)};
+export const tint=(ref,l,sat=1)=>{const [h,s]=toHsl(ref);return fromHsl(h,Math.min(1,s*sat),l)};
+export const lighten=(hex,minL)=>{const [h,s,l]=toHsl(hex);return l>=minL?hex:fromHsl(h,s,minL)};
 // moves fg's lightness towards whichever extreme (white or black) contrasts more with bg, until the pair reaches `min`. That extreme always gets there (both reach 4.58:1 at luminance .18)
-function fit(fg,bg,min){
+export function fit(fg,bg,min){
  const [h,s,start]=toHsl(fg),step=contrast('#000000',bg)>contrast('#ffffff',bg)?-.02:.02;let l=start;
  for(let i=0;i<60&&contrast(fromHsl(h,s,l),bg)<min;i++)l=Math.max(0,Math.min(1,l+step));
  return fromHsl(h,s,l);
@@ -71,9 +73,9 @@ export function darkClassic(theme){
 // Which looks a page has. `own` is the palette the page really uses (Galeri passes its skin-aware palette); otherwise the catalogue's saved theme over the defaults.
 // A light page gets a generated dark look. A dark Galeri page keeps its own look and gets the light defaults. A dark Klasik page has no toggle.
 export function lookFor(catalog,layout,own){
- const gallery=layout==='gallery',mine=valid(gallery?LIGHT_GALLERY:LIGHT_CLASSIC,own||catalog?.theme);
+ const gallery=layout==='gallery'||layout==='martini',lightGallery=layout==='martini'?LIGHT_MARTINI:LIGHT_GALLERY,mine=valid(gallery?lightGallery:LIGHT_CLASSIC,own||catalog?.theme);
  if(!isDarkBg(gallery?mine.gBg:mine.cream))return {base:'light',toggle:true,themes:{light:mine,dark:gallery?darkGallery(mine):darkClassic(mine)}};
- if(gallery)return {base:'dark',toggle:true,themes:{light:LIGHT_GALLERY,dark:mine}};
+ if(gallery)return {base:'dark',toggle:true,themes:{light:lightGallery,dark:mine}};
  return {base:'dark',toggle:false,themes:{light:mine,dark:mine}};
 }
 
