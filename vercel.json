@@ -2,7 +2,7 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/:slug([a-z0-9-]+)", "destination": "/index.html" }
+    { "source": "/:slug([a-z0-9-]+)", "destination": "/index" }
   ],
   "redirects": [
     { "source": "/", "destination": "https://reka.al", "permanent": false }
