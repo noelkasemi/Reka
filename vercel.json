@@ -5,6 +5,7 @@
     { "source": "/:slug([a-z0-9-]+)", "destination": "/index" }
   ],
   "redirects": [
+    { "source": "/", "has": [{ "type": "host", "value": "martini-catalogs.vercel.app" }], "destination": "https://martini.al", "permanent": false },
     { "source": "/", "destination": "https://reka.al", "permanent": false }
   ],
   "headers": [
