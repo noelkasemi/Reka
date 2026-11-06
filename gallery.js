@@ -2,7 +2,8 @@
 // so everything the CMS edits keeps working. Restaurants get the light "Atelier" skin, bars the dark "Nocturne" skin; the palette is editable.
 import {element,imageURL,sharedSlug} from './theme.js';
 import {applyLook,currentLook,lookFor,modeButton,saveChoice,MODE_KEY} from './mode.js';
-import {categoryNames,cleanSize,noteOf,initialSelection,orderDetail,orderURL,waHref,PHONE} from './card.js';
+import {categoryNames,cleanSize,noteOf,initialSelection,orderDetail,orderURL} from './card.js';
+import {BRANDS,profileOf,documentTitle,generalURL,listURL,logoMarkup} from './brand.js';
 
 export const GALLERY_KEYS=['gBg','gTile','gInk','gMuted','gAccent','gAccentText','gDark','gDarkText','gLine'];
 export const GALLERY_DEFAULTS={
@@ -19,7 +20,7 @@ const skinOf=mode=>mode==='bars'?'bars':'restaurant';
 // First restaurant defaults (before the contrast fix) that were saved into catalogs without being chosen by hand: treated as unset.
 const OLD_DEFAULTS={gAccent:'#a9701f',gMuted:'#6c6a5e'};
 export const galleryTheme=(theme,mode)=>({...GALLERY_DEFAULTS[skinOf(mode)],...Object.fromEntries(GALLERY_KEYS.filter(key=>HEX.test(theme?.[key])&&theme[key].toLowerCase()!==OLD_DEFAULTS[key]).map(key=>[key,theme[key]]))});
-export const galleryTexts=(catalog,mode)=>({...GALLERY_TEXTS[skinOf(mode)],...Object.fromEntries(['title','intro'].filter(key=>typeof catalog?.texts?.[key]==='string'&&catalog.texts[key].trim()).map(key=>[key,catalog.texts[key].trim()]))});
+export const galleryTexts=(catalog,mode,brand=BRANDS.reka)=>({...(brand.texts||GALLERY_TEXTS[skinOf(mode)]),...Object.fromEntries(['title','intro'].filter(key=>typeof catalog?.texts?.[key]==='string'&&catalog.texts[key].trim()).map(key=>[key,catalog.texts[key].trim()]))});
 const luminance=hex=>{const [r,g,b]=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255).map(c=>c<=.03928?c/12.92:((c+.055)/1.055)**2.4);return .2126*r+.7152*g+.0722*b};
 
 // Paints the palette onto a root element (the live page, or the CMS preview stage).
@@ -75,14 +76,14 @@ export function createGalleryCard(product,{index=0,saved=false,onOpen,onSave}={}
 }
 
 // Compact page used by the CMS Design tab: header, hero, category chips and two cards, painted with the draft palette.
-export function createGalleryMock(stage,{theme,mode,products,cards=products.slice(0,2),texts}){
+export function createGalleryMock(stage,{theme,mode,products,cards=products.slice(0,2),texts,brand=BRANDS.reka}){
  paintGallery(stage,theme,mode);stage.classList.add('g-mock');stage.replaceChildren();
- const logo=element('img','','g-logo-img');logo.src='assets/logo.png';logo.alt='Reka Horeca';
+ const logo=E('span','g-logo');logo.innerHTML=logoMarkup(brand);logo.classList.toggle('mk',brand.logo.kind==='mark');
  const picks=spotlightOf(products),plate=E('div','g-plate'),shot=element('img');if(picks[0]){shot.src=imageURL(picks[0].image);shot.alt=''}plate.append(shot);
  const chips=E('div','g-chips-row');['Të gjitha','Kategoria 2','Kategoria 3'].forEach((label,i)=>{const chip=E('span','g-chip',label);chip.setAttribute('aria-pressed',String(!i));chips.append(chip)});
  stage.append(
-  E('div','g-top on',E('div','g-top-in',E('span','g-logo',logo),E('span','g-pill',svg(ICON.list),'Lista ime'))),
-  E('div','g-hero',E('div','g-in',E('div','g-copy',E('p','g-eyebrow','Katalogu Reka Horeca'),titleNode(texts.title),E('p','g-intro',texts.intro)),E('div','g-stage',plate))),
+  E('div','g-top on',E('div','g-top-in',logo,E('span','g-pill',svg(ICON.list),'Lista ime'))),
+  E('div','g-hero',E('div','g-in',E('div','g-copy',E('p','g-eyebrow',brand.eyebrow),titleNode(texts.title),E('p','g-intro',texts.intro)),E('div','g-stage',plate))),
   E('div','g-bar',chips),
   E('div','g-grid',...cards.map((product,i)=>createGalleryCard(product,{index:i,onOpen:()=>{},onSave:()=>{}})))
  );
@@ -97,12 +98,12 @@ export async function startGallery(catalog,mode){
  for(const link of [...document.querySelectorAll('link[rel=stylesheet]')])if(!/loader\.css/.test(link.getAttribute('href')))link.remove();
  await galleryStyles();
  const products=catalog.products.filter(product=>product.visible).sort((a,b)=>b.priority-a.priority);
- const byId=new Map(products.map(product=>[product.id,product])),texts=galleryTexts(catalog,mode);
+ const brand=profileOf(catalog),byId=new Map(products.map(product=>[product.id,product])),texts=galleryTexts(catalog,mode,brand);
  const selections=new Map(),selectionOf=product=>{if(!selections.has(product.id))selections.set(product.id,initialSelection(product));return selections.get(product.id)};
  const KEY='reka-list-'+(sharedSlug()||mode);let list=[];
  try{list=JSON.parse(localStorage.getItem(KEY)||'[]').filter(item=>byId.has(item.id));for(const item of list){const selection=selectionOf(byId.get(item.id));selection.variant=item.variant??selection.variant;selection.color=item.color??selection.color}list=list.map(item=>item.id)}catch{list=[]}
  let category='',query='',shown=products,sheetList=products,sheetIndex=0;
- document.title=catalog.name?catalog.name+' — Reka Horeca':'Reka Horeca — '+(mode==='bars'?'Katalogu Bars':'Katalogu i produkteve');
+ document.title=documentTitle(brand,{design:'gallery',mode,name:catalog.name});
 
  const root=E('div','g');document.body.className='';document.body.removeAttribute('style');document.body.replaceChildren(root);
  // Light or dark: the catalogue's own look unless the visitor chose otherwise (button in the header).
@@ -110,8 +111,8 @@ export async function startGallery(catalog,mode){
  const paint=dark=>{const colors=paintGallery(root,look.themes[dark?'dark':'light'],mode);document.body.style.background=colors.gBg;document.querySelector('meta[name="theme-color"]')?.setAttribute('content',colors.gDark);applyLook(dark)};
  const dark0=currentLook(look)==='dark';paint(dark0);
 
- const logo=()=>{const link=E('a','g-logo');link.href='#';link.setAttribute('aria-label','Reka Horeca, kreu');const image=element('img');image.src='assets/logo.png';image.alt='Reka Horeca';image.width=460;image.height=68;link.append(image);return link};
- const wa=E('a','g-wa',svg(ICON.chat),E('span','','WhatsApp'));wa.href=waHref('Përshëndetje Reka Horeca! Dua informacion për produktet.');wa.target='_blank';wa.rel='noopener';
+ const logo=()=>{const link=E('a','g-logo');link.href='#';link.setAttribute('aria-label',brand.name+', kreu');link.innerHTML=logoMarkup(brand);link.classList.toggle('mk',brand.logo.kind==='mark');return link};
+ const wa=E('a','g-wa',svg(ICON.chat),E('span','','WhatsApp'));wa.href=generalURL(brand);wa.target='_blank';wa.rel='noopener';
  const listBtn=E('button','g-pill',svg(ICON.list),E('span','','Lista ime'),E('b','','0'));listBtn.type='button';
  const top=E('header','g-top',E('div','g-wrap g-top-in',logo(),E('div','g-top-actions',...[look.toggle&&modeButton({dark:dark0,onToggle:dark=>{saveChoice(MODE_KEY,dark?'dark':'light');paint(dark)}}),wa,listBtn].filter(Boolean))));
 
@@ -130,7 +131,7 @@ export async function startGallery(catalog,mode){
  stageBtn.onclick=stageGo.onclick=()=>picks[pick]&&openSheet(picks[pick],picks);
  const cta=E('a','g-btn primary','Shiko produktet ',svg(ICON.down));cta.href='#katalogu';
  const talk=E('a','g-btn ghost','Na shkruani');talk.href=wa.href;talk.target='_blank';talk.rel='noopener';
- const hero=E('section','g-hero',E('div','g-wrap g-in',E('div','g-copy',E('p','g-eyebrow','Katalogu Reka Horeca'),titleNode(texts.title),E('p','g-intro',texts.intro),E('div','g-cta',cta,talk)),stage));
+ const hero=E('section','g-hero',E('div','g-wrap g-in',E('div','g-copy',E('p','g-eyebrow',brand.eyebrow),titleNode(texts.title),E('p','g-intro',texts.intro),E('div','g-cta',cta,talk)),stage));
  if(!picks.length)stage.hidden=true;
 
  // Bars skin: a slow ticker of the category names under the hero
@@ -156,7 +157,7 @@ export async function startGallery(catalog,mode){
  const contact=(label,small,href,external)=>{const link=E('a','',label,E('small','',small));link.href=href;if(external){link.target='_blank';link.rel='noopener'}return link};
  const band=E('section','g-band',E('div','g-wrap g-band-in',E('h2','','Nuk e gjeni atë që kërkoni?'),E('p','','Na shkruani në WhatsApp dhe ju ndihmojmë të zgjidhni.'),contact('Na shkruani në WhatsApp','Porosi dhe pyetje',wa.href,true)));
  band.querySelector('a').className='g-btn primary';
- const foot=E('footer','g-foot',E('div','g-wrap g-foot-in',E('div','',logo(),E('p','','Zgjidhni produktin në katalog dhe porositni direkt në WhatsApp.')),E('div','g-contacts',contact('+355 69 40 50 377','Telefononi','tel:+'+PHONE),contact('WhatsApp','Porosi dhe pyetje',wa.href,true))),E('p','g-copy-line','© Reka Horeca'));
+ const foot=E('footer','g-foot',E('div','g-wrap g-foot-in',E('div','',logo(),E('p','',brand.footerLine),...(brand.address?[E('p','',brand.address)]:[])),E('div','g-contacts',contact(brand.phoneLabel,'Telefononi','tel:+'+brand.phone),...(brand.email?[contact(brand.email,'Email','mailto:'+brand.email)]:[]),contact('WhatsApp','Porosi dhe pyetje',wa.href,true))),E('p','g-copy-line',brand.copyright));
  const fab=E('button','g-fab',svg(ICON.list),E('span','','Lista ime · '),E('b','','0'),E('span','','Shiko ›'));fab.type='button';
  const sheet=E('dialog','g-sheet'),drawer=E('dialog','g-drawer');sheet.setAttribute('aria-label','Detajet e produktit');drawer.setAttribute('aria-label','Lista ime');
  root.append(top,hero,ticker,find,bar,host,empty,band,foot,fab,sheet,drawer);
@@ -217,7 +218,7 @@ export async function startGallery(catalog,mode){
   tile.addEventListener('touchstart',event=>{x0=event.touches[0].clientX;y0=event.touches[0].clientY},{passive:true});
   tile.addEventListener('touchend',event=>{const dx=event.changedTouches[0].clientX-x0,dy=event.changedTouches[0].clientY-y0;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5&&!tile.classList.contains('zoom'))step(dx<0?1:-1)});
   const order=E('a','g-btn primary',svg(ICON.chat),E('span','','Porosit në WhatsApp'));order.target='_blank';order.rel='noopener';
-  const update=()=>{order.href=orderURL(product,selection)};update();
+  const update=()=>{order.href=orderURL(product,selection,brand)};update();
   const save=E('button','g-btn ghost g-save',svg(ICON.heart),E('span','',' Ruaj në listë'));save.type='button';save.onclick=()=>toggleSave(product);
   const body=E('div','g-sheet-body',E('small','',product.category),E('h2','',product.name));
   if(noteOf(product))body.append(E('p','g-note',noteOf(product)));
@@ -245,7 +246,7 @@ export async function startGallery(catalog,mode){
   if(!items.length)rows.append(E('p','g-empty-list','Lista është bosh. Shtypni ♡ te produktet që ju pëlqejnë, pastaj dërgojini të gjitha me një prekje.'));
   const send=E('a','g-btn primary',svg(ICON.chat),E('span','','Dërgo listën në WhatsApp'));send.target='_blank';send.rel='noopener';
   const wipe=E('button','g-link','Pastro listën');wipe.type='button';wipe.onclick=()=>{list=[];persist();sync();renderDrawer()};
-  renderDrawerFoot.update=()=>{send.href=items.length?waHref('Përshëndetje Reka Horeca! Dëshiroj të porosis:\n'+items.map(product=>'• '+orderDetail(product,selectionOf(product))).join('\n')+'\nFaleminderit!'):'#';send.style.opacity=items.length?1:.4;send.style.pointerEvents=items.length?'':'none'};
+  renderDrawerFoot.update=()=>{send.href=items.length?listURL(brand,items.map(product=>orderDetail(product,selectionOf(product)))):'#';send.style.opacity=items.length?1:.4;send.style.pointerEvents=items.length?'':'none'};
   renderDrawerFoot();
   drawer.replaceChildren(E('div','g-drawer-in',head,rows,E('div','g-df',send,items.length?wipe:E('span'))));
  }

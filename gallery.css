@@ -34,6 +34,13 @@ html{scroll-behavior:smooth}
 /* Narrow phones: the header now has one more button, so the buttons get smaller and the logo keeps some air */
 @media(max-width:420px){.g-top-actions{gap:6px}.g .mode-btn{width:38px;height:38px}.g-wa,.g-pill{min-height:38px;padding:0 12px}.g-logo{margin-right:6px;flex-shrink:0}.g-logo img{height:18px}}
 @media(max-width:360px){.g-logo{margin-right:0}.g-logo img{height:16px}}
+/* Martini&K logo (mark + wordmark) in place of the Reka image: the word follows the page ink, the mark and the & the accent */
+.g-logo.mk{display:flex;align-items:center;gap:8px;line-height:1;color:var(--gInk)}
+.g-logo .m-mark{width:26px;height:28px;flex:none;fill:none;stroke:var(--gAccent);stroke-linecap:round;stroke-linejoin:round}
+.g-logo .m-word{font:700 14px/1 var(--body);letter-spacing:.09em;white-space:nowrap}
+.g-logo .m-word span{color:var(--gAccent)}
+.g-foot .g-logo.mk{color:var(--gDarkText)}
+@media(max-width:420px){.g-logo .m-mark{width:21px;height:23px}.g-logo .m-word{font-size:12px;letter-spacing:.06em}}
 @media(max-width:345px){.g-top-actions{gap:4px}.g .mode-btn{width:34px;height:34px}.g-wa,.g-pill{min-height:34px;padding:0 8px}}
 /* Dark look: the search field is a faint tint of the text colour (the photo tile colour stays light and made it a grey pill) */
 html[data-look=dark] .g-search{background:color-mix(in srgb,var(--gInk) 6%,transparent)}
