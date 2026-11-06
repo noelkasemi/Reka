@@ -1,18 +1,14 @@
 import {applyTheme,element,loadCatalog,imageURL} from './theme.js';
 import {applyLook,currentLook,lookFor,modeButton,saveChoice,MODE_KEY} from './mode.js';
-import {buildOptions,cardStyleName,categoryNames,createCard,initialSelection,noteOf,orderURL,waHref} from './card.js';
+import {buildOptions,cardStyleName,categoryNames,createCard,initialSelection,noteOf,orderURL} from './card.js';
+import {BRANDS,profileOf,documentTitle,heroTitle,generalURL,logoMarkup} from './brand.js';
 
 // Classic page design. app.js loads the catalog once and passes it in; mode is "restaurant" or "bars".
 export async function startClassic(preloaded,mode){
 
 const $=selector=>document.querySelector(selector);
 const norm=value=>String(value||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
-const COPY={
- restaurant:{title:'Pajisje profesionale për kuzhinën tuaj',doc:'Reka Horeca — Katalogu i produkteve'},
- bars:{title:'Pajisje profesionale për barin tuaj',doc:'Reka Horeca — Katalogu Bars i produkteve'}
-}[mode];
-
-let products=[],category='',style='slate',order=[];
+let products=[],category='',style='slate',order=[],brand=BRANDS.reka;
 const selections=new Map(),nodes=new Map();
 const sheet=$('#sheet'),host=$('#products'),filters=$('#filters'),search=$('#search');
 
@@ -21,7 +17,7 @@ const EMPTY_ICON='<svg class="empty-icon" viewBox="0 0 64 64" aria-hidden="true"
 const selectionOf=product=>{if(!selections.has(product.id))selections.set(product.id,initialSelection(product));return selections.get(product.id)};
 
 function cardFor(product,eager=false){
- const card=createCard(product,{style,selection:selectionOf(product),eager,onOpen:openSheet});
+ const card=createCard(product,{style,selection:selectionOf(product),eager,onOpen:openSheet,brand});
  nodes.set(product.id,card);
  if(reveal){card.classList.add('reveal');reveal.observe(card)}
  return card;
@@ -72,7 +68,7 @@ function openSheet(product){
  const close=element('button','×','sheet-close');close.type='button';close.setAttribute('aria-label','Mbyll');close.onclick=()=>sheet.close();
  const picture=element('div','','sheet-image'),image=element('img');image.src=imageURL(product.image);image.alt=product.name;picture.append(image,close);
  const order=element('a','','order');order.target='_blank';order.rel='noopener';order.append(element('span','Porosit në WhatsApp'));
- const update=()=>{order.href=orderURL(product,selection)};update();
+ const update=()=>{order.href=orderURL(product,selection,brand)};update();
  const body=element('div','','sheet-body');
  body.append(element('p',product.category,'sheet-cat'),element('h2',product.name));
  if(noteOf(product))body.append(element('p',noteOf(product),'sheet-note'));
@@ -86,18 +82,30 @@ sheet.addEventListener('click',event=>{if(event.target===sheet)sheet.close()});
 
 search.oninput=render;
 $('#clear').onclick=()=>{search.value='';search.focus();render()};
-for(const link of document.querySelectorAll('[data-wa]'))link.href=waHref('Përshëndetje Reka Horeca! Dua informacion për produktet.');
+// index.html is written for Reka. Another business's page takes its logo, footer text, numbers and WhatsApp links from the profile
+// (the no-JavaScript text is not touched here: it only shows when this code cannot run, so the per-catalogue page sets it).
+function applyBrand(profile){
+ brand=profile;for(const link of document.querySelectorAll('[data-wa]'))link.href=generalURL(profile);
+ if(profile.id==='reka')return;
+ for(const link of document.querySelectorAll('.logo')){link.innerHTML=logoMarkup(profile);link.classList.toggle('mk',profile.logo.kind==='mark');link.setAttribute('aria-label',profile.name+', kreu')}
+ const note=$('.foot .logo').parentElement.querySelector('p');note.textContent=profile.footerLine;if(profile.address)note.after(element('p',profile.address));
+ const phone=$('.contacts a[href^="tel:"]');phone.href='tel:+'+profile.phone;phone.firstChild.textContent=profile.phoneLabel+' ';
+ if(profile.email){const mail=element('a');mail.href='mailto:'+profile.email;mail.append(profile.email+' ',element('small','Email'));phone.after(mail)}
+ $('.copy').textContent=profile.copyright;
+}
+applyBrand(BRANDS.reka);
 addEventListener('scroll',()=>$('#fab').classList.toggle('show',scrollY>520),{passive:true});
 
 const waitFor=image=>image.decode().catch(()=>{});
 
 try{
  const catalog=preloaded||await loadCatalog(mode);
+ applyBrand(profileOf(catalog));
  // Light or dark: the catalogue's own look unless the visitor chose otherwise (button in the header).
  const look=lookFor(catalog,'classic'),paint=dark=>{applyTheme(look.themes[dark?'dark':'light']);applyLook(dark)},dark0=currentLook(look)==='dark';
  paint(dark0);style=cardStyleName(catalog.cardStyle);
  if(look.toggle){const wa=$('.wa-pill'),group=element('div','','top-actions');wa.replaceWith(group);group.append(modeButton({dark:dark0,onToggle:dark=>{saveChoice(MODE_KEY,dark?'dark':'light');paint(dark)}}),wa)}
- document.title=catalog.name?catalog.name+' — Reka Horeca':COPY.doc;$('#title').innerHTML=COPY.title+'<span>.</span>';
+ document.title=documentTitle(brand,{design:'classic',mode,name:catalog.name});$('#title').innerHTML=heroTitle(brand,mode)+'<span>.</span>';
  products=catalog.products.filter(product=>product.visible).sort((a,b)=>b.priority-a.priority);
  const names=order=categoryNames(catalog,products);
  for(const name of ['',...names]){

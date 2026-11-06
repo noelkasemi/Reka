@@ -1,14 +1,10 @@
 // "Martini" page design: everything that needs no DOM (so Node tests can import it). The page itself is martini.js.
 // Business details are fixed in this design on purpose: the CMS has no fields for them.
 import {contrast,luminance,fit,lighten} from './mode.js';
+import {BRANDS,MARTINI,waHref as brandWaHref,orderURL as brandOrderURL,listURL as brandListURL,generalURL as brandGeneralURL} from './brand.js';
 
-export const MARTINI=Object.freeze({
- name:'Martini&K',phone:'355692034304',phoneLabel:'+355 69 20 34 304',email:'info@martini.al',address:'5040 Rruga Dardania Kashar, Tiranë',
- facebook:'https://www.facebook.com/MartiniK-102694901456834',instagram:'https://www.instagram.com/martinipack/',linkedin:'https://www.linkedin.com/company/martini-k-shpk/about/',
- since:'Est. 2007 · Tiranë',stamps:['Organic','Biodegradable','Eco-friendly'],
- stats:[{to:300,suffix:'+',label:'klientë të kënaqur'},{to:100,suffix:'+',label:'produkte të ndryshme'},{to:2007,suffix:'',label:'që nga viti'}],
- tagline:'Power of Nature',blurb:'Kompania #1 e paketimeve dhe produkteve një përdorimshe. Shpërndajmë produkte në të gjithë vendin që nga viti 2007.'
-});
+// The fixed details and the message wording live in brand.js (shared with the other designs and the CMS); this file re-exports what the Martini design uses.
+export {MARTINI};
 
 // Same nine colours as the Galeri design, so the CMS colour editor, validation and the generated dark look work unchanged.
 export const MARTINI_KEYS=['gBg','gTile','gInk','gMuted','gAccent','gAccentText','gDark','gDarkText','gLine'];
@@ -18,7 +14,7 @@ export const MARTINI_PRESETS=[
  {name:'Kraft & Leaf',note:'Kraft i ngrohtë me gjelbër. Pamja e Martini&K.',theme:MARTINI_DEFAULTS},
  {name:'Natë & Mint',note:'E errët me gjelbër mint.',theme:{gBg:'#0F1F18',gTile:'#FFFFFF',gInk:'#EDE6D3',gMuted:'#AEB5A5',gAccent:'#4CC596',gAccentText:'#06180F',gDark:'#0A1612',gDarkText:'#F1EBDA',gLine:'#26402F'}}
 ];
-export const MARTINI_TEXTS={title:'Gjithçka fillon me produktet tona',intro:'Paketime dhe produkte një përdorimshe për restorante, kafene, furra dhe dërgesa. Zgjidhni produktin dhe porositni direkt në WhatsApp.'};
+export const MARTINI_TEXTS=BRANDS.martini.texts;
 
 const HEX=/^#[0-9a-f]{6}$/i;
 export const martiniTheme=theme=>({...MARTINI_DEFAULTS,...Object.fromEntries(MARTINI_KEYS.filter(key=>HEX.test(theme?.[key])).map(key=>[key,theme[key]]))});
@@ -73,11 +69,11 @@ export function splitDescription(text){
 const GENERIC_NOTE=/^sipas katalogut$/i;
 export const cleanSize=value=>String(value).replace(/^[Øø]\s*/,'').trim();
 export const noteOf=product=>GENERIC_NOTE.test(product.note||'')?'':(product.note||'');
-export const waHref=text=>'https://wa.me/'+MARTINI.phone+'?text='+encodeURIComponent(text);
+export const waHref=text=>brandWaHref(BRANDS.martini,text);
 export const orderLine=(product,selection)=>[product.name,noteOf(product),cleanSize(selection?.variant||''),selection?.color].filter(Boolean).join(' · ');
-export const orderURL=(product,selection)=>waHref('Përshëndetje '+MARTINI.name+'! Dëshiroj të porosis: '+orderLine(product,selection)+'. Faleminderit!');
-export const listURL=items=>waHref('Përshëndetje '+MARTINI.name+'! Dëshiroj të porosis:\n'+items.map(({product,selection})=>'• '+orderLine(product,selection)).join('\n')+'\nFaleminderit!');
-export const generalURL=()=>waHref('Përshëndetje '+MARTINI.name+'! Kam një pyetje për produktet tuaja.');
+export const orderURL=(product,selection)=>brandOrderURL(BRANDS.martini,orderLine(product,selection));
+export const listURL=items=>brandListURL(BRANDS.martini,items.map(({product,selection})=>orderLine(product,selection)));
+export const generalURL=()=>brandGeneralURL(BRANDS.martini);
 
 // ---- saved list (Lista ime): the browser's storage may be blocked or hold junk, so reading never throws ----
 export function readList(storage,key,validIds){
