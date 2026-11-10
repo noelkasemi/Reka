@@ -1,6 +1,6 @@
 // Product card shared by the public catalog and the CMS preview, so what you see in the CMS is what customers get.
 import {element,imageURL} from './theme.js';
-import {BRANDS,waHref as brandWaHref,orderURL as brandOrderURL} from './brand.js';
+import {BRANDS,waHref as brandWaHref,orderURL as brandOrderURL,pageLink} from './brand.js';
 
 export const PHONE=BRANDS.reka.phone;
 const GENERIC_NOTE=/^sipas katalogut$/i;
@@ -15,7 +15,7 @@ export const waHref=(text,profile=BRANDS.reka)=>brandWaHref(profile,text);
 export const cardStyleName=style=>({slate:'slate',ornate:'ornate',classic:'classic',standard:'slate',compact:'slate',poster:'slate',minimal:'classic'})[style]||'slate';
 export const initialSelection=product=>({variant:cleanSize(product.variants[0]||''),color:product.colors[0]||''});
 export const orderDetail=(product,selection)=>[product.name,noteOf(product),selection.variant,selection.color].filter(Boolean).join(' · ');
-export const orderURL=(product,selection,profile=BRANDS.reka)=>brandOrderURL(profile,orderDetail(product,selection));
+export const orderURL=(product,selection,profile=BRANDS.reka)=>brandOrderURL(profile,orderDetail(product,selection),pageLink(product));
 
 // Fades the right edge of a chip row only when it actually scrolls.
 const fits=new ResizeObserver(entries=>{for(const {target} of entries)target.classList.toggle('is-scroll',target.scrollWidth>target.clientWidth+1)});

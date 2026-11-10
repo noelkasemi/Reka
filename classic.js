@@ -1,7 +1,7 @@
 import {applyTheme,element,loadCatalog,imageURL} from './theme.js';
 import {applyLook,currentLook,lookFor,modeButton,saveChoice,MODE_KEY} from './mode.js';
 import {buildOptions,cardStyleName,categoryNames,createCard,initialSelection,noteOf,orderURL} from './card.js';
-import {BRANDS,profileOf,documentTitle,heroTitle,generalURL,logoMarkup} from './brand.js';
+import {BRANDS,profileOf,documentTitle,heroTitle,generalURL,logoMarkup,linkedProductId} from './brand.js';
 
 // Classic page design. app.js loads the catalog once and passes it in; mode is "restaurant" or "bars".
 export async function startClassic(preloaded,mode){
@@ -116,6 +116,8 @@ try{
  }
  renderSpotlight();
  render();
+ const linked=products.find(product=>product.id===linkedProductId());   // a shared product link (?p=<id>) opens that product once the loading screen is gone
+ if(linked)RekaLoader.whenHidden(()=>openSheet(linked));
  // Hold the cat until the first row of photos is in, but never longer than 2.5 s.
  await Promise.race([Promise.all([...host.querySelectorAll('img')].slice(0,4).map(waitFor)),new Promise(done=>setTimeout(done,2500))]);
 }catch(error){

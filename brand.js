@@ -51,8 +51,14 @@ export const defaultDesign=brand=>brand==='martini'?'martini':'gallery';
 
 export const waHref=(profile,text)=>'https://wa.me/'+profile.phone+'?text='+encodeURIComponent(text);
 export const generalURL=profile=>waHref(profile,profile.generalMessage);
-export const orderURL=(profile,detail)=>waHref(profile,profile.greeting+' Dëshiroj të porosis: '+detail+'. Faleminderit!');
-export const listURL=(profile,lines)=>waHref(profile,profile.greeting+' Dëshiroj të porosis:\n'+lines.map(line=>'• '+line).join('\n')+'\nFaleminderit!');
+// A product link tells the shop exactly which product was meant, even when names repeat: the catalogue page opens that product's popup from ?p=<id>.
+export const productLink=(base,id)=>String(base).split(/[?#]/)[0]+'?p='+encodeURIComponent(id);
+// These two read the browser address when there is one (they are empty in Node, so the message builders stay pure and testable).
+export const pageLink=product=>typeof location==='undefined'?'':productLink(location.origin+location.pathname,product.id);
+export const linkedProductId=()=>typeof location==='undefined'?'':new URLSearchParams(location.search).get('p')||'';
+export const orderURL=(profile,detail,link='')=>waHref(profile,profile.greeting+' Dëshiroj të porosis: '+detail+(link?'.\nShiko produktin: '+link+'\nFaleminderit!':'. Faleminderit!'));
+// lines: strings, or {text,link} to put the product link under the line
+export const listURL=(profile,lines)=>waHref(profile,profile.greeting+' Dëshiroj të porosis:\n'+lines.map(line=>typeof line==='string'?'• '+line:'• '+line.text+(line.link?'\n  '+line.link:'')).join('\n')+'\nFaleminderit!');
 
 // The tab title. Reka keeps each design's own wording (and "<name> — Reka Horeca" for a named catalogue); Martini is always its own title.
 export function documentTitle(profile,{design,mode,name}={}){
