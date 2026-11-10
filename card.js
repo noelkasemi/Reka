@@ -1,6 +1,7 @@
 // Product card shared by the public catalog and the CMS preview, so what you see in the CMS is what customers get.
 import {element,imageURL} from './theme.js';
 import {BRANDS,waHref as brandWaHref,orderURL as brandOrderURL,pageLink} from './brand.js';
+import {priceOf,formatPrice} from './price.js';
 
 export const PHONE=BRANDS.reka.phone;
 const GENERIC_NOTE=/^sipas katalogut$/i;
@@ -16,6 +17,21 @@ export const cardStyleName=style=>({slate:'slate',ornate:'ornate',classic:'class
 export const initialSelection=product=>({variant:cleanSize(product.variants[0]||''),color:product.colors[0]||''});
 export const orderDetail=(product,selection)=>[product.name,noteOf(product),selection.variant,selection.color].filter(Boolean).join(' · ');
 export const orderURL=(product,selection,profile=BRANDS.reka)=>brandOrderURL(profile,orderDetail(product,selection),pageLink(product));
+
+// Discounts. The price row of a card or popup: the price alone, or the old price struck through next to the discounted one.
+// "prefix" is the design's class prefix (price, g-price, m-price); the percent badge is separate (saleBadge) because it sits on the photo.
+export function priceBlock(product,prefix='price'){
+ const info=priceOf(product);if(!info)return null;
+ const row=element('span','',prefix),hidden=text=>element('span',text,prefix+'-vh');
+ if(info.sale===null){row.append(element('b',formatPrice(info.price),prefix+'-now'));return row}
+ row.append(hidden('Çmimi i mëparshëm: '),element('s',formatPrice(info.price),prefix+'-old'),' ',hidden('Çmimi me zbritje: '),element('b',formatPrice(info.sale),prefix+'-now'));
+ return row;
+}
+// "-15%" (rounded up, see price.js), or null when the product has no discount.
+export function saleBadge(product,cls='sale-badge'){
+ const info=priceOf(product);if(!info||info.sale===null)return null;
+ const badge=element('span','-'+info.percent+'%',cls);badge.setAttribute('aria-label','Zbritje '+info.percent+'%');return badge;
+}
 
 // Fades the right edge of a chip row only when it actually scrolls.
 const fits=new ResizeObserver(entries=>{for(const {target} of entries)target.classList.toggle('is-scroll',target.scrollWidth>target.clientWidth+1)});
@@ -54,6 +70,7 @@ export function createCard(product,{style='slate',selection=initialSelection(pro
  image.onload=ready;image.onerror=()=>picture.classList.add('ready');
  if(image.complete&&image.naturalWidth)ready();
  picture.append(image);
+ const badge=saleBadge(product);if(badge)picture.append(badge);
  const title=element('h3',product.name);title.title=product.name;
  const order=element('a','','order'),label=element('span',product.colors.length&&onOpen?'Zgjidh ngjyrën':'Porosit');
  order.innerHTML=ORDER_ICON;order.append(label);order.target='_blank';order.rel='noopener';
@@ -65,6 +82,7 @@ export function createCard(product,{style='slate',selection=initialSelection(pro
   title.classList.add('is-link');title.onclick=()=>onOpen(product);
   if(product.colors.length)order.onclick=event=>{event.preventDefault();onOpen(product)};
  }
- body.append(title,element('p',subtitle(product),'card-note'),buildOptions(product,selection,()=>{update();onSelect?.()},{compact:true}),order);
+ const price=priceBlock(product);
+ body.append(title,element('p',subtitle(product),'card-note'),...(price?[price]:[]),buildOptions(product,selection,()=>{update();onSelect?.()},{compact:true}),order);
  update();card.append(picture,body);return card;
 }

@@ -2,7 +2,7 @@
 // so everything the CMS edits keeps working. Restaurants get the light "Atelier" skin, bars the dark "Nocturne" skin; the palette is editable.
 import {element,imageURL,sharedSlug} from './theme.js';
 import {applyLook,currentLook,lookFor,modeButton,saveChoice,MODE_KEY} from './mode.js';
-import {categoryNames,cleanSize,noteOf,initialSelection,orderDetail,orderURL} from './card.js';
+import {categoryNames,cleanSize,noteOf,initialSelection,orderDetail,orderURL,priceBlock,saleBadge} from './card.js';
 import {BRANDS,profileOf,documentTitle,generalURL,listURL,logoMarkup,pageLink,linkedProductId} from './brand.js';
 
 export const GALLERY_KEYS=['gBg','gTile','gInk','gMuted','gAccent','gAccentText','gDark','gDarkText','gLine'];
@@ -63,8 +63,10 @@ export function createGalleryCard(product,{index=0,saved=false,onOpen,onSave}={}
  image.src=imageURL(product.image);image.alt='';image.decoding='async';image.loading=index<4?'eager':'lazy';
  image.onload=()=>image.classList.add('loaded');image.onerror=()=>image.classList.add('loaded');if(image.complete&&image.naturalWidth)image.classList.add('loaded');
  tile.append(image,E('span','g-idx',String(index+1).padStart(2,'0')));
+ const badge=saleBadge(product,'g-sale');if(badge)tile.append(badge);
  const note=[noteOf(product),sizesLine(product)].filter(Boolean).join(' — ');
  const meta=E('span','g-meta',E('small','',product.category),E('h3','',product.name),E('span','g-sub',note||' '));
+ const price=priceBlock(product,'g-price');if(price)meta.append(price);
  open.append(tile,meta);open.onclick=()=>onOpen?.(product);card.append(open);
  if(onSave){
   const heart=E('button','g-heart',svg(ICON.heart));heart.type='button';heart.dataset.save=product.id;
@@ -210,6 +212,7 @@ export async function startGallery(catalog,mode){
   const closeBtn=E('button','g-x',svg(ICON.close));closeBtn.type='button';closeBtn.setAttribute('aria-label','Mbyll');closeBtn.onclick=()=>close(sheet);
   const image=element('img');image.src=imageURL(product.image);image.alt=product.name;
   const tile=E('div','g-sheet-tile',image,closeBtn);
+  const badge=saleBadge(product,'g-sale');if(badge)tile.append(badge);
   if(sheetList.length>1){for(const [delta,icon,label] of [[-1,ICON.left,'Para'],[1,ICON.right,'Pas']]){const b=E('button','g-nav '+(delta<0?'l':'r'),svg(icon));b.type='button';b.setAttribute('aria-label',label);b.onclick=event=>{event.stopPropagation();step(delta)};tile.append(b)}}
   tile.append(E('span','g-pos',(sheetIndex+1)+' / '+sheetList.length));
   let x0=0,y0=0;
@@ -222,6 +225,7 @@ export async function startGallery(catalog,mode){
   const save=E('button','g-btn ghost g-save',svg(ICON.heart),E('span','',' Ruaj në listë'));save.type='button';save.onclick=()=>toggleSave(product);
   const body=E('div','g-sheet-body',E('small','',product.category),E('h2','',product.name));
   if(noteOf(product))body.append(E('p','g-note',noteOf(product)));
+  const price=priceBlock(product,'g-price');if(price)body.append(price);
   if(product.description)body.append(E('p','g-desc',product.description));
   if(product.variants.length)body.append(choice(product.variants.map(cleanSize),selection,'variant','Përmasa',update));
   if(product.colors.length)body.append(choice(product.colors,selection,'color','Ngjyra',update));

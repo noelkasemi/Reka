@@ -227,3 +227,11 @@ html:has(.m dialog[open]){overflow:hidden}
 .m-mock .m-chips{margin:0;padding:8px 12px}
 .m-mock .m-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:12px}
 .m-mock .m-wrap{width:calc(100% - 24px)}
+
+/* Discounts: a red "-15%" badge on the photo, the old price struck through, the discounted price bold */
+.m-ph{position:relative}
+.m-sale{position:absolute;left:10px;top:10px;z-index:2;padding:4px 9px;border-radius:8px;background:#c8372d;color:#fff;font:800 .78rem/1 Nunito,sans-serif;letter-spacing:.02em;pointer-events:none}
+.m-price{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;font:800 1rem/1.2 Nunito,sans-serif;color:var(--ink)}
+.m-price-old{font-weight:600;font-size:.85rem;opacity:.6;text-decoration:line-through}
+.m-price-vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.m-sh-body .m-price{font-size:1.4rem}.m-sh-body .m-price-old{font-size:1rem}
