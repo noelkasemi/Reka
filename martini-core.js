@@ -1,7 +1,7 @@
 // "Martini" page design: everything that needs no DOM (so Node tests can import it). The page itself is martini.js.
 // Business details are fixed in this design on purpose: the CMS has no fields for them.
 import {contrast,luminance,fit,lighten} from './mode.js';
-import {BRANDS,MARTINI,waHref as brandWaHref,orderURL as brandOrderURL,listURL as brandListURL,generalURL as brandGeneralURL} from './brand.js';
+import {BRANDS,MARTINI,waHref as brandWaHref,orderURL as brandOrderURL,listURL as brandListURL,generalURL as brandGeneralURL,pageLink} from './brand.js';
 
 // The fixed details and the message wording live in brand.js (shared with the other designs and the CMS); this file re-exports what the Martini design uses.
 export {MARTINI};
@@ -71,8 +71,8 @@ export const cleanSize=value=>String(value).replace(/^[Øø]\s*/,'').trim();
 export const noteOf=product=>GENERIC_NOTE.test(product.note||'')?'':(product.note||'');
 export const waHref=text=>brandWaHref(BRANDS.martini,text);
 export const orderLine=(product,selection)=>[product.name,noteOf(product),cleanSize(selection?.variant||''),selection?.color].filter(Boolean).join(' · ');
-export const orderURL=(product,selection)=>brandOrderURL(BRANDS.martini,orderLine(product,selection));
-export const listURL=items=>brandListURL(BRANDS.martini,items.map(({product,selection})=>orderLine(product,selection)));
+export const orderURL=(product,selection)=>brandOrderURL(BRANDS.martini,orderLine(product,selection),pageLink(product));
+export const listURL=items=>brandListURL(BRANDS.martini,items.map(({product,selection})=>({text:orderLine(product,selection),link:pageLink(product)})));
 export const generalURL=()=>brandGeneralURL(BRANDS.martini);
 
 // ---- saved list (Lista ime): the browser's storage may be blocked or hold junk, so reading never throws ----

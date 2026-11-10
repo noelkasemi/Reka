@@ -2,7 +2,7 @@
 // Same catalog.json as the other designs. Pure logic lives in martini-core.js; this file is the DOM. Business details are fixed (see MARTINI).
 import {element,imageURL,sharedSlug} from './theme.js';
 import {applyLook,currentLook,lookFor,luminance,modeButton,saveChoice,MODE_KEY} from './mode.js';
-import {MARK_SVG} from './brand.js';
+import {MARK_SVG,linkedProductId} from './brand.js';
 import {MARTINI,MARTINI_DEFAULTS,MARTINI_PRESETS,MARTINI_TEXTS,martiniTheme,martiniTexts,martiniTokens,spotlightOf,searchProducts,categoryNames,groupByCategory,splitDescription,cleanSize,noteOf,orderLine,orderURL,listURL,generalURL,readList,saveList} from './martini-core.js';
 
 export {MARTINI_DEFAULTS,MARTINI_PRESETS,MARTINI_TEXTS,martiniTheme,martiniTexts};
@@ -280,5 +280,7 @@ export async function startMartini(catalog){
  }
 
  paintChips();render();sync();
+ const linked=products.find(product=>product.id===linkedProductId());   // a shared product link (?p=<id>) opens that product once the loading screen is gone
+ if(linked)RekaLoader.whenHidden(()=>openSheet(linked,products));
  await Promise.race([Promise.all([...root.querySelectorAll('.m-grid img')].slice(0,4).map(image=>image.decode().catch(()=>{}))),new Promise(done=>setTimeout(done,2500))]);
 }

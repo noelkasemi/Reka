@@ -3,7 +3,7 @@
 import {element,imageURL,sharedSlug} from './theme.js';
 import {applyLook,currentLook,lookFor,modeButton,saveChoice,MODE_KEY} from './mode.js';
 import {categoryNames,cleanSize,noteOf,initialSelection,orderDetail,orderURL} from './card.js';
-import {BRANDS,profileOf,documentTitle,generalURL,listURL,logoMarkup} from './brand.js';
+import {BRANDS,profileOf,documentTitle,generalURL,listURL,logoMarkup,pageLink,linkedProductId} from './brand.js';
 
 export const GALLERY_KEYS=['gBg','gTile','gInk','gMuted','gAccent','gAccentText','gDark','gDarkText','gLine'];
 export const GALLERY_DEFAULTS={
@@ -246,7 +246,7 @@ export async function startGallery(catalog,mode){
   if(!items.length)rows.append(E('p','g-empty-list','Lista është bosh. Shtypni ♡ te produktet që ju pëlqejnë, pastaj dërgojini të gjitha me një prekje.'));
   const send=E('a','g-btn primary',svg(ICON.chat),E('span','','Dërgo listën në WhatsApp'));send.target='_blank';send.rel='noopener';
   const wipe=E('button','g-link','Pastro listën');wipe.type='button';wipe.onclick=()=>{list=[];persist();sync();renderDrawer()};
-  renderDrawerFoot.update=()=>{send.href=items.length?listURL(brand,items.map(product=>orderDetail(product,selectionOf(product)))):'#';send.style.opacity=items.length?1:.4;send.style.pointerEvents=items.length?'':'none'};
+  renderDrawerFoot.update=()=>{send.href=items.length?listURL(brand,items.map(product=>({text:orderDetail(product,selectionOf(product)),link:pageLink(product)}))):'#';send.style.opacity=items.length?1:.4;send.style.pointerEvents=items.length?'':'none'};
   renderDrawerFoot();
   drawer.replaceChildren(E('div','g-drawer-in',head,rows,E('div','g-df',send,items.length?wipe:E('span'))));
  }
@@ -256,6 +256,8 @@ export async function startGallery(catalog,mode){
  addEventListener('scroll',()=>top.classList.toggle('on',scrollY>12),{passive:true});
 
  render();show(0);sync();
+ const linked=products.find(product=>product.id===linkedProductId());   // a shared product link (?p=<id>) opens that product once the loading screen is gone
+ if(linked)RekaLoader.whenHidden(()=>openSheet(linked,products));
  if(picks.length>1&&!matchMedia('(prefers-reduced-motion: reduce)').matches)timer=setInterval(()=>{if(!document.hidden&&!sheet.open&&!drawer.open)show((pick+1)%picks.length)},4800);
  await Promise.race([Promise.all([...root.querySelectorAll('.g-grid img')].slice(0,4).map(image=>image.decode().catch(()=>{}))),new Promise(done=>setTimeout(done,2500))]);
 }
