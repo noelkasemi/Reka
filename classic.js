@@ -1,6 +1,6 @@
 import {applyTheme,element,loadCatalog,imageURL} from './theme.js';
 import {applyLook,currentLook,lookFor,modeButton,saveChoice,MODE_KEY} from './mode.js';
-import {buildOptions,cardStyleName,categoryNames,createCard,initialSelection,noteOf,orderURL} from './card.js';
+import {buildOptions,cardStyleName,categoryNames,createCard,initialSelection,noteOf,orderURL,priceBlock,saleBadge} from './card.js';
 import {BRANDS,profileOf,documentTitle,heroTitle,generalURL,logoMarkup,linkedProductId} from './brand.js';
 
 // Classic page design. app.js loads the catalog once and passes it in; mode is "restaurant" or "bars".
@@ -67,11 +67,13 @@ function openSheet(product){
  const selection=selectionOf(product);
  const close=element('button','×','sheet-close');close.type='button';close.setAttribute('aria-label','Mbyll');close.onclick=()=>sheet.close();
  const picture=element('div','','sheet-image'),image=element('img');image.src=imageURL(product.image);image.alt=product.name;picture.append(image,close);
+ const badge=saleBadge(product);if(badge)picture.append(badge);
  const order=element('a','','order');order.target='_blank';order.rel='noopener';order.append(element('span','Porosit në WhatsApp'));
  const update=()=>{order.href=orderURL(product,selection,brand)};update();
  const body=element('div','','sheet-body');
  body.append(element('p',product.category,'sheet-cat'),element('h2',product.name));
  if(noteOf(product))body.append(element('p',noteOf(product),'sheet-note'));
+ const price=priceBlock(product);if(price)body.append(price);
  if(product.description)body.append(element('p',product.description,'sheet-desc'));
  body.append(buildOptions(product,selection,update),order);
  const inner=element('div','','sheet-inner');inner.append(picture,body);
