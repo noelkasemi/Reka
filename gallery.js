@@ -2,7 +2,7 @@
 // so everything the CMS edits keeps working. Restaurants get the light "Atelier" skin, bars the dark "Nocturne" skin; the palette is editable.
 import {element,imageURL,sharedSlug} from './theme.js';
 import {applyLook,currentLook,lookFor,modeButton,saveChoice,MODE_KEY} from './mode.js';
-import {categoryNames,cleanSize,noteOf,initialSelection,orderDetail,orderURL,preloadPhotos,priceBlock,saleBadge} from './card.js';
+import {categoryNames,cleanSize,noteOf,initialSelection,orderDetail,orderURL,preloadPhotos,priceBlock,priceSync,saleBadge} from './card.js';
 import {propertiesOf,selectedOf,pickOption,photoOf,restoreSelection,propertyText,orderParts} from './properties.js';
 import {BRANDS,profileOf,documentTitle,generalURL,listURL,logoMarkup,pageLink,linkedProductId} from './brand.js';
 
@@ -58,16 +58,16 @@ export const spotlightOf=products=>{const chosen=products.filter(product=>produc
 const sizesLine=product=>{const sizes=product.variants.map(cleanSize);return sizes.length>3?sizes.slice(0,3).join(' · ')+' +'+(sizes.length-3):sizes.join(' · ')};
 
 // One product card; used by the public page and by the CMS previews.
-export function createGalleryCard(product,{index=0,saved=false,onOpen,onSave}={}){
+export function createGalleryCard(product,{index=0,saved=false,selection=initialSelection(product),onOpen,onSave}={}){
  const card=E('article','g-card'),open=E('button','g-open'),tile=E('span','g-tile'),image=element('img','','g-img');
  open.type='button';open.setAttribute('aria-label',product.name);card.dataset.id=product.id;
  image.src=imageURL(product.image);image.alt='';image.decoding='async';image.loading=index<4?'eager':'lazy';
  image.onload=()=>image.classList.add('loaded');image.onerror=()=>image.classList.add('loaded');if(image.complete&&image.naturalWidth)image.classList.add('loaded');
  tile.append(image,E('span','g-idx',String(index+1).padStart(2,'0')));
- const badge=saleBadge(product,'g-sale');if(badge)tile.append(badge);
+ const badge=saleBadge(product,'g-sale',selection);if(badge)tile.append(badge);
  const note=[noteOf(product),sizesLine(product)].filter(Boolean).join(' — ');
  const meta=E('span','g-meta',E('small','',product.category),E('h3','',product.name),E('span','g-sub',note||' '));
- const price=priceBlock(product,'g-price');if(price)meta.append(price);
+ const price=priceBlock(product,'g-price',selection);if(price)meta.append(price);
  open.append(tile,meta);open.onclick=()=>onOpen?.(product);card.append(open);
  if(onSave){
   const heart=E('button','g-heart',svg(ICON.heart));heart.type='button';heart.dataset.save=product.id;
@@ -176,7 +176,7 @@ export async function startGallery(catalog,mode){
   for(const [name,items] of groups){
    const block=E('section','g-block'),grid=E('div','g-grid');
    if(name)block.append(E('div','g-head',E('h2','',name),E('span','',String(items.length))));
-   for(const product of items){const card=createGalleryCard(product,{index:index++,saved:list.includes(product.id),onOpen:item=>openSheet(item,shown),onSave:toggleSave});if(reveal){card.classList.add('reveal');card.style.transitionDelay=Math.min(index%4,3)*60+'ms';reveal.observe(card)}grid.append(card)}
+   for(const product of items){const card=createGalleryCard(product,{index:index++,selection:selectionOf(product),saved:list.includes(product.id),onOpen:item=>openSheet(item,shown),onSave:toggleSave});if(reveal){card.classList.add('reveal');card.style.transitionDelay=Math.min(index%4,3)*60+'ms';reveal.observe(card)}grid.append(card)}
    block.append(grid);host.append(block);
   }
   count.textContent=shown.length+' produkte';clear.hidden=!query;empty.hidden=!!shown.length;
@@ -215,7 +215,7 @@ export async function startGallery(catalog,mode){
   image.onerror=()=>{const main=imageURL(product.image);if(shown!==main){shown=main;image.src=main}};   // an option photo that cannot load shows the main photo
   const showPhoto=()=>{const next=imageURL(photoOf(product,selection));if(next!==shown){shown=next;image.src=next}};preloadPhotos(product);
   const tile=E('div','g-sheet-tile',image,closeBtn);
-  const badge=saleBadge(product,'g-sale');if(badge)tile.append(badge);
+  const prices=priceSync(product,selection,{prefix:'g-price',badgeClass:'g-sale',placePrice:row=>anchor.after(row),placeBadge:badge=>tile.append(badge)});if(prices.badge)tile.append(prices.badge);
   if(sheetList.length>1){for(const [delta,icon,label] of [[-1,ICON.left,'Para'],[1,ICON.right,'Pas']]){const b=E('button','g-nav '+(delta<0?'l':'r'),svg(icon));b.type='button';b.setAttribute('aria-label',label);b.onclick=event=>{event.stopPropagation();step(delta)};tile.append(b)}}
   tile.append(E('span','g-pos',(sheetIndex+1)+' / '+sheetList.length));
   let x0=0,y0=0;
@@ -228,9 +228,10 @@ export async function startGallery(catalog,mode){
   const save=E('button','g-btn ghost g-save',svg(ICON.heart),E('span','',' Ruaj në listë'));save.type='button';save.onclick=()=>toggleSave(product);
   const body=E('div','g-sheet-body',E('small','',product.category),E('h2','',product.name));
   if(noteOf(product))body.append(E('p','g-note',noteOf(product)));
-  const price=priceBlock(product,'g-price');if(price)body.append(price);
+  const anchor=body.lastElementChild;   // the price row goes right after the note (or the title)
+  if(prices.row)body.append(prices.row);
   if(product.description)body.append(E('p','g-desc',product.description));
-  for(const item of propertiesOf(product))body.append(choice(item.values,selection,item.key,item.name,()=>{update();showPhoto()}));
+  for(const item of propertiesOf(product))body.append(choice(item.values,selection,item.key,item.name,()=>{update();showPhoto();prices.refresh()}));
   body.append(E('div','g-actions',order,save));
   sheet.replaceChildren(E('div','g-sheet-in',E('span','g-grip'),tile,body));sync();
  }

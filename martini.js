@@ -3,7 +3,7 @@
 import {element,imageURL,sharedSlug} from './theme.js';
 import {applyLook,currentLook,lookFor,luminance,modeButton,saveChoice,MODE_KEY} from './mode.js';
 import {MARK_SVG,linkedProductId} from './brand.js';
-import {preloadPhotos,priceBlock,saleBadge} from './card.js';
+import {preloadPhotos,priceBlock,priceSync,saleBadge} from './card.js';
 import {initialSelection,propertiesOf,selectedOf,pickOption,photoOf,restoreSelection,orderParts} from './properties.js';
 import {MARTINI,MARTINI_DEFAULTS,MARTINI_PRESETS,MARTINI_TEXTS,martiniTheme,martiniTexts,martiniTokens,spotlightOf,searchProducts,categoryNames,groupByCategory,splitDescription,cleanSize,noteOf,orderLine,orderURL,listURL,generalURL,readList,saveList} from './martini-core.js';
 
@@ -46,15 +46,15 @@ function titleNode(text){
 const sizesLine=product=>{const sizes=(product.variants||[]).map(cleanSize);return sizes.length>3?sizes.slice(0,3).join(' · ')+' +'+(sizes.length-3):sizes.join(' · ')};
 
 // One product card; used by the public page and by the CMS previews. Martini's card plus a ♡ in the corner of the photo.
-export function createMartiniCard(product,{index=0,saved=false,onOpen,onSave}={}){
+export function createMartiniCard(product,{index=0,saved=false,selection=initialSelection(product),onOpen,onSave}={}){
  const card=E('article','m-card'),open=E('button','m-open'),photo=E('span','m-ph');
  card.dataset.id=product.id;open.type='button';
  const placeholder=()=>{photo.replaceChildren();photo.classList.add('empty');photo.dataset.initial=(product.category||product.name||'?')[0]};
  if(product.image){const image=new Image();image.alt='';image.width=800;image.height=600;image.decoding='async';image.loading=index<4?'eager':'lazy';image.onerror=placeholder;image.src=imageURL(product.image);photo.append(image)}else placeholder();
  const pack=noteOf(product)||sizesLine(product);
  const text=E('span','m-tx',E('span','m-cat',product.category),E('span','m-nm',product.name));if(pack)text.append(E('span','m-pk',pack));
- const badge=saleBadge(product,'m-sale');if(badge)photo.append(badge);
- const price=priceBlock(product,'m-price');if(price)text.insertBefore(price,text.querySelector('.m-pk'));
+ const badge=saleBadge(product,'m-sale',selection);if(badge)photo.append(badge);
+ const price=priceBlock(product,'m-price',selection);if(price)text.insertBefore(price,text.querySelector('.m-pk'));
  open.append(photo,text);open.onclick=()=>onOpen?.(product);card.append(open);
  if(onSave){
   const heart=E('button','m-heart',svg(ICON.heart));heart.type='button';heart.dataset.save=product.id;
@@ -116,7 +116,7 @@ export async function startMartini(catalog){
  const cta=E('a','m-cta','Shfleto katalogun ',svg(ICON.down));cta.href='#katalogu';
  const stats=E('div','m-stats',...MARTINI.stats.map(stat=>{const box=E('div','m-stat',E('b','',stat.to+stat.suffix),E('span','',stat.label));box.dataset.to=stat.to;box.dataset.suffix=stat.suffix;return box}));
  const spot=E('div','m-spot'),spotWrap=E('div','m-spot-wrap',E('p','m-eyebrow','Të përzgjedhura'),spot);
- spot.append(...picks.map((product,i)=>createMartiniCard(product,{index:i,saved:list.includes(product.id),onOpen:item=>openSheet(item,picks),onSave:toggleSave})));
+ spot.append(...picks.map((product,i)=>createMartiniCard(product,{index:i,selection:selectionOf(product),saved:list.includes(product.id),onOpen:item=>openSheet(item,picks),onSave:toggleSave})));
  if(!picks.length)spotWrap.hidden=true;
  const hero=E('section','m-hero',E('div','m-wrap',E('div','m-hero-in',E('div','',E('p','m-eyebrow',MARTINI.since),titleNode(texts.title),E('p','m-intro',texts.intro),E('ul','m-stamps',...MARTINI.stamps.map(stamp=>E('li','',stamp))),cta,stats),art),spotWrap),tear());
 
@@ -157,7 +157,7 @@ export async function startMartini(catalog){
   for(const [name,items] of sections){
    const block=E('section','m-block'),grid=E('div','m-grid');
    if(name)block.append(E('div','m-head',E('i','m-dia'),E('h2','',name),E('span','m-n',String(items.length))));
-   for(const product of items)grid.append(createMartiniCard(product,{index:index++,saved:list.includes(product.id),onOpen:item=>openSheet(item,shown),onSave:toggleSave}));
+   for(const product of items)grid.append(createMartiniCard(product,{index:index++,selection:selectionOf(product),saved:list.includes(product.id),onOpen:item=>openSheet(item,shown),onSave:toggleSave}));
    block.append(grid);host.append(block);
   }
   count.textContent=shown.length+(shown.length===1?' produkt':' produkte');clear.hidden=!query;
@@ -240,7 +240,7 @@ export async function startMartini(catalog){
   if(shown){image=new Image();image.alt=product.name;image.src=imageURL(shown);image.onerror=()=>{if(shown!==product.image){shown=product.image;image.src=imageURL(shown)}};photo.append(image)}else{photo.classList.add('empty');photo.dataset.initial=(product.category||product.name||'?')[0]}   // an option photo that cannot load shows the main photo
   const showPhoto=()=>{const next=photoOf(product,selection);if(image&&next&&next!==shown){shown=next;image.src=imageURL(next)}};preloadPhotos(product);
   photo.append(closeBtn);
-  const badge=saleBadge(product,'m-sale');if(badge)photo.append(badge);
+  const prices=priceSync(product,selection,{prefix:'m-price',badgeClass:'m-sale',placePrice:row=>anchor.after(row),placeBadge:badge=>photo.append(badge)});if(prices.badge)photo.append(prices.badge);
   if(sheetList.length>1){
    for(const [delta,label,path] of [[-1,'Para','<path d="m14 6-6 6 6 6"/>'],[1,'Pas','<path d="m10 6 6 6-6 6"/>']]){const button=E('button','m-nav '+(delta<0?'l':'r'),svg(path));button.type='button';button.setAttribute('aria-label',label);button.onclick=event=>{event.stopPropagation();step(delta)};photo.append(button)}
    photo.append(E('span','m-pos',(sheetIndex+1)+' / '+sheetList.length));
@@ -251,12 +251,13 @@ export async function startMartini(catalog){
   const name=E('h2','m-sh-name',product.name);name.id='m-sh-name';
   const body=E('div','m-sh-body',E('p','m-cat',product.category),name);
   const note=noteOf(product);if(note&&!specs.some(([,value])=>value===note))body.append(E('p','m-sh-note',note));
-  const price=priceBlock(product,'m-price');if(price)body.append(price);
+  const anchor=body.lastElementChild;   // the price row goes right after the note (or the title)
+  if(prices.row)body.append(prices.row);
   if(specs.length){const dl=E('dl','m-specs');for(const [label,value] of specs)dl.append(E('div','',E('dt','',label),E('dd','',value)));body.append(dl)}
   if(text)body.append(E('p','m-desc',text));
   const order=E('a','m-btn mint',svg(ICON.chat),E('span','','Porosit në WhatsApp'));order.target='_blank';order.rel='noopener';
   const update=()=>{order.href=orderURL(product,selection);order.setAttribute('aria-label','Porosit '+orderLine(product,selection)+' në WhatsApp')};update();
-  const changed=()=>{update();showPhoto()};
+  const changed=()=>{update();showPhoto();prices.refresh()};
   if(variants.length>1)body.append(choice(variants,selection,'variants','Përmasa',changed));
   if(colors.length>1)body.append(choice(colors,selection,'colors','Ngjyra',changed));
   for(const item of custom)if(item.values.length>1)body.append(choice(item.values,selection,item.key,item.name,changed));

@@ -1,12 +1,14 @@
 // Product properties and their photos. A product has sizes (variants) and colours, and optionally custom properties (any name, any values, e.g. Material: Steel).
 // Any value of any property can have its own photo; the photo of the selected option is shown on the card and in the popup. Pure (no DOM, no imports): the pages,
-// the CMS form and the server all use this one file (npm run sync copies it to reka-cms/public/ and reka-cms/lib/).
+// the CMS form and the server all use this one file (npm run sync copies it to reka-cms/public/ and reka-cms/lib/). Its only import is the pure price.js.
 //
 // On a product (all optional):  properties: [{name, values:[text]}]
 //                               photos: {"variants":{"24 cm":path}, "colors":{"Red":path}, "p:<property name>":{"Steel":path}}
+//                               prices: {"variants":{"24 cm":{price,salePrice?}}, "colors":{...}, "p:<property name>":{...}}   (same keys as photos; price.js rules)
 // A selection (what the customer picked): {variant, color, props:{[name]:value}, recent:[property keys, last click first]}; saved lists may hold older ones without props/recent.
+import {priceOf,MAX_PRICE} from './price.js';
 export const cleanSize=value=>String(value).replace(/^[Øø]\s*/,'').trim();
-export const LIMITS=Object.freeze({properties:8,name:40,values:40,value:100,photos:40});
+export const LIMITS=Object.freeze({properties:8,name:40,values:40,value:100,photos:40,prices:100});
 const BUILTIN=new Set(['size','sizes','colour','color','colours','colors','permasa','ngjyra','permasat','ngjyrat']);
 const fold=text=>String(text).normalize('NFD').replace(/[̀-ͯ]/g,'').trim().toLowerCase();
 const PHOTO=/^(assets\/(?:[\w-]+\/)*[\w.-]+|uploads\/[\w.-]+|https:\/\/(www\.)?reka\.al\/[^\s"<>]+)$/;   // same rule as the main photo (lib/products.mjs)
@@ -34,10 +36,30 @@ export function pickOption(selection,key,value){
  selection.recent=[key,...(selection.recent||[]).filter(item=>item!==key)];
 }
 export const optionPhoto=(product,key,value)=>{const map=product?.photos?.[key];return own(product?.photos,key)&&own(map,value)&&typeof map[value]==='string'?map[value]:''};
-// The photo to show: the selected option of the property clicked last that has one (before any click: sizes, colours, custom in order), else the main photo.
-export function photoOf(product,selection){
- for(const key of [...(selection?.recent||[]),...propertiesOf(product).map(item=>item.key)]){const photo=optionPhoto(product,key,selectedOf(selection,key));if(photo)return photo}
- return product.image;
+// The selected options in the order of the photo and price rule: the property clicked last first (before any click: sizes, colours, custom in order).
+// Returns what pick(key,value) finds for the first selected option that has something, else null.
+function firstSelected(product,selection,pick){
+ for(const key of [...(selection?.recent||[]),...propertiesOf(product).map(item=>item.key)]){const found=pick(key,selectedOf(selection,key));if(found)return found}
+ return null;
+}
+// The photo to show: the selected option of the property clicked last that has one, else the main photo.
+export const photoOf=(product,selection)=>firstSelected(product,selection,(key,value)=>optionPhoto(product,key,value))||product.image;
+// The stored price entry {price,salePrice?} of a value, or null.
+export const optionPrice=(product,key,value)=>{const entry=own(product?.prices,key)&&own(product.prices[key],value)?product.prices[key][value]:null;return plain(entry)?entry:null};
+// The price block to show ({price,sale,percent} as priceOf, or null): the selected option of the property clicked last that has a valid price replaces the product's own price and discount
+// (a plain priced option shows no discount even when the product has one); with none, the product's own price.
+export const priceFor=(product,selection)=>firstSelected(product,selection,(key,value)=>{const entry=optionPrice(product,key,value);return entry?priceOf({price:entry.price,salePrice:entry.salePrice}):null})||priceOf(product);
+// Does the product have a usable option price (so its price can change with the selection)?
+export const hasOptionPrices=product=>propertiesOf(product).some(item=>item.values.some(value=>{const entry=optionPrice(product,item.key,value);return !!entry&&priceOf(entry)!==null}));
+// The CMS form's specific messages for one option's fields (undefined/null = empty field). '' when fine.
+export function optionPriceProblem(price,salePrice){
+ const has=number=>number!==undefined&&number!==null;
+ if(has(price)&&!(Number.isInteger(price)&&price>=1&&price<=MAX_PRICE))return 'Price must be a whole number from 1 to 10 000 000.';
+ if(has(salePrice)){
+  if(!has(price))return 'Enter the price before the sale price.';
+  if(!Number.isInteger(salePrice)||salePrice<1||salePrice>=price)return 'Sale price must be a whole number lower than the price.';
+ }
+ return '';
 }
 export const photoPaths=product=>Object.values(plain(product?.photos)?product.photos:{}).flatMap(map=>plain(map)?Object.values(map):[]).filter(path=>typeof path==='string');
 // Extra words for the order message: only the custom properties ("Material: Steel"); size and colour are added by the callers as before.
@@ -72,13 +94,19 @@ export function tidyProduct(product){
  if(properties.length)out.properties=properties;else delete out.properties;
  const allowed={variants:new Set((product.variants||[]).map(cleanSize)),colors:new Set(product.colors||[])};
  for(const item of properties)allowed['p:'+item.name]=new Set(item.values);
- const photos={};
- for(const [key,map] of Object.entries(plain(product.photos)?product.photos:{})){
-  if(!own(allowed,key)||!plain(map))continue;
-  const kept=Object.fromEntries(Object.entries(map).filter(([value,path])=>allowed[key].has(value)&&typeof path==='string'&&path));
-  if(Object.keys(kept).length)photos[key]=kept;
- }
+ // photos and prices are kept only for values that still exist (and entries that are usable); empty maps are removed
+ const prune=(source,usable)=>{
+  const kept={};
+  for(const [key,map] of Object.entries(plain(source)?source:{})){
+   if(!own(allowed,key)||!plain(map))continue;
+   const entries=Object.fromEntries(Object.entries(map).filter(([value,item])=>allowed[key].has(value)&&usable(item)));
+   if(Object.keys(entries).length)kept[key]=entries;
+  }
+  return kept;
+ };
+ const photos=prune(product.photos,path=>typeof path==='string'&&path),prices=prune(product.prices,entry=>plain(entry)&&priceOf(entry)!==null);
  if(Object.keys(photos).length)out.photos=photos;else delete out.photos;
+ if(Object.keys(prices).length)out.prices=prices;else delete out.prices;
  return out;
 }
 // The rows of the CMS form ([{name, values}] as typed, before tidyProduct drops anything): '' when fine, otherwise what the owner should fix (empty rows are ignored).
@@ -99,7 +127,7 @@ export function propertyRowsProblem(rows){
 }
 // '' when fine, otherwise the message the server shows (English: the CMS wording of this feature).
 export function propertiesProblem(product){
- const BAD='Custom properties are not valid.',BADP='Option photos are not valid.';
+ const BAD='Custom properties are not valid.',BADP='Option photos are not valid.',BADPRICE='Option prices are not valid.';
  if(product.properties!==undefined){
   if(!Array.isArray(product.properties)||product.properties.length>LIMITS.properties)return BAD;
   const names=new Set();
@@ -121,6 +149,21 @@ export function propertiesProblem(product){
    for(const [value,path] of Object.entries(map)){if(!allowed[key].has(value)||typeof path!=='string'||!PHOTO.test(path)||path.includes('..'))return BADP;count++}
   }
   if(count>LIMITS.photos)return BADP;
+ }
+ if(product.prices!==undefined){
+  if(!plain(product.prices))return BADPRICE;
+  const allowed={variants:new Set((product.variants||[]).map(cleanSize)),colors:new Set(product.colors||[])};
+  for(const item of customOf(product))allowed['p:'+item.name]=new Set(item.values);
+  let count=0;
+  for(const [key,map] of Object.entries(product.prices)){
+   if(!own(allowed,key)||!plain(map))return BADPRICE;
+   for(const [value,entry] of Object.entries(map)){
+    if(!allowed[key].has(value)||!plain(entry)||Object.keys(entry).some(field=>field!=='price'&&field!=='salePrice'))return BADPRICE;
+    if(typeof entry.price!=='number'||(entry.salePrice!==undefined&&typeof entry.salePrice!=='number')||optionPriceProblem(entry.price,entry.salePrice))return BADPRICE;
+    count++;
+   }
+  }
+  if(count>LIMITS.prices)return BADPRICE;
  }
  return '';
 }

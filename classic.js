@@ -1,6 +1,6 @@
 import {applyTheme,element,loadCatalog,imageURL} from './theme.js';
 import {applyLook,currentLook,lookFor,modeButton,saveChoice,MODE_KEY} from './mode.js';
-import {buildOptions,cardStyleName,categoryNames,createCard,initialSelection,noteOf,orderURL,preloadPhotos,priceBlock,saleBadge} from './card.js';
+import {buildOptions,cardStyleName,categoryNames,createCard,initialSelection,noteOf,orderURL,preloadPhotos,priceSync} from './card.js';
 import {photoOf,propertyText} from './properties.js';
 import {BRANDS,profileOf,documentTitle,heroTitle,generalURL,logoMarkup,linkedProductId} from './brand.js';
 import {customCardOf} from './customcard.js';
@@ -72,15 +72,16 @@ function openSheet(product){
  image.onerror=()=>{const main=imageURL(product.image);if(shown!==main){shown=main;image.src=main}};   // an option photo that cannot load shows the main photo
  const showPhoto=()=>{const next=imageURL(photoOf(product,selection));if(next!==shown){shown=next;image.src=next}};
  preloadPhotos(product);
- const badge=saleBadge(product);if(badge)picture.append(badge);
+ const prices=priceSync(product,selection,{placePrice:row=>anchor.after(row),placeBadge:badge=>picture.append(badge)});if(prices.badge)picture.append(prices.badge);
  const order=element('a','','order');order.target='_blank';order.rel='noopener';order.append(element('span','Porosit në WhatsApp'));
  const update=()=>{order.href=orderURL(product,selection,brand)};update();
  const body=element('div','','sheet-body');
  body.append(element('p',product.category,'sheet-cat'),element('h2',product.name));
  if(noteOf(product))body.append(element('p',noteOf(product),'sheet-note'));
- const price=priceBlock(product);if(price)body.append(price);
+ const anchor=body.lastElementChild;   // the price row goes right after the note (or the title)
+ if(prices.row)body.append(prices.row);
  if(product.description)body.append(element('p',product.description,'sheet-desc'));
- body.append(buildOptions(product,selection,()=>{update();showPhoto()}),order);
+ body.append(buildOptions(product,selection,()=>{update();showPhoto();prices.refresh()}),order);
  const inner=element('div','','sheet-inner');inner.append(picture,body);
  sheet.replaceChildren(inner);sheet.showModal();
  sheet.onclose=()=>{const old=nodes.get(product.id);if(old)old.replaceWith(cardFor(product))};
