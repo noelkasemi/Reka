@@ -1,6 +1,6 @@
 /* Public catalog page. Mobile-first; colors all come from the theme variables the CMS controls. */
 html{scroll-behavior:smooth;scroll-padding-top:150px;-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--cream);color:var(--ink);font-family:Arial,Helvetica,sans-serif}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:var(--font-body,Arial,Helvetica,sans-serif)}
 body:has(dialog[open]){overflow:hidden}
 [hidden]{display:none!important}
 a{color:inherit;text-decoration:none}
@@ -41,14 +41,14 @@ html[data-look=dark] .spot-card{color:#1c2f25;--muted:#5f6a5c}
 .spot{position:relative;overflow:hidden;padding:20px 0 22px;color:var(--headerText);background:radial-gradient(110% 120% at 100% 0,color-mix(in srgb,var(--gold) 22%,transparent),transparent 60%),linear-gradient(165deg,var(--green),color-mix(in srgb,var(--green) 70%,#000))}
 .spot-in{display:grid;gap:16px}
 .eyebrow{margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:.24em;color:var(--gold)}
-.spot h1{margin:0;font:normal clamp(23px,6.6vw,34px)/1.12 Georgia,serif;letter-spacing:-.01em}
+.spot h1{margin:0;font:normal clamp(23px,6.6vw,34px)/1.12 var(--font-heading,Georgia,serif);letter-spacing:-.01em}
 .spot h1 span{color:var(--gold)}
 .spot-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .spot-card{display:flex;align-items:center;gap:10px;min-width:0;padding:8px 10px 8px 8px;border:0;border-radius:14px;background:#fff;color:var(--ink);text-align:left;cursor:pointer;box-shadow:0 8px 18px #0000003d;transition:transform .2s}
 .spot-card:hover{transform:translateY(-2px)}.spot-card:active{transform:scale(.98)}
 .spot-img{display:grid;place-items:center;flex:none;width:56px;height:56px}
 .spot-img img{max-width:100%;max-height:100%;object-fit:contain}
-.spot-name{min-width:0;font:700 12px/1.25 Arial,Helvetica,sans-serif;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.spot-name{min-width:0;font:700 12px/1.25 var(--font-body,Arial,Helvetica,sans-serif);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
 .spot-cta{display:none}
 
 /* Sticky search + categories */
@@ -73,7 +73,7 @@ html[data-look=dark] .spot-card{color:#1c2f25;--muted:#5f6a5c}
 main{padding-bottom:40px}
 .cat-block{padding-top:26px}
 .cat-head{display:flex;align-items:center;gap:12px;margin:0 0 16px}
-.cat-head h2{margin:0;font:normal 22px/1.1 Georgia,serif;letter-spacing:-.01em}
+.cat-head h2{margin:0;font:normal 22px/1.1 var(--font-heading,Georgia,serif);letter-spacing:-.01em}
 .cat-head span{padding:3px 9px;border-radius:999px;background:color-mix(in srgb,var(--gold) 30%,transparent);font-size:11px;font-weight:700}
 .cat-head::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--gold),transparent)}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 10px;align-items:stretch}
@@ -81,7 +81,7 @@ main{padding-bottom:40px}
 .card.reveal.in{opacity:1;transform:none}
 #empty{padding:46px 10px;text-align:center}
 #empty .empty-icon{width:64px;height:64px;margin-bottom:10px;fill:none;stroke:var(--muted);stroke-width:3;stroke-linecap:round;opacity:.6}
-#empty h3{margin:0 0 6px;font:normal 24px Georgia,serif}
+#empty h3{margin:0 0 6px;font:normal 24px var(--font-heading,Georgia,serif)}
 #empty p{margin:0 0 18px;color:var(--muted)}
 #empty .btn{background:var(--button);color:var(--buttonText);border:0;cursor:pointer}
 
@@ -93,7 +93,7 @@ dialog.sheet::backdrop{background:#0b211a99;-webkit-backdrop-filter:blur(3px);ba
 .sheet-close{position:absolute;top:12px;right:12px;width:40px;height:40px;border:0;border-radius:50%;background:var(--button);color:var(--buttonText);font-size:22px;line-height:1;cursor:pointer}
 .sheet-body{display:grid;gap:14px;padding:20px 20px 24px}
 .sheet-cat{margin:0;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
-.sheet h2{margin:-6px 0 0;font:normal 26px/1.15 Georgia,serif}
+.sheet h2{margin:-6px 0 0;font:normal 26px/1.15 var(--font-heading,Georgia,serif)}
 .sheet-note{margin:0;color:var(--muted);font-size:14px}
 .sheet-desc{margin:0;font-size:14px;line-height:1.65;white-space:pre-wrap}
 .sheet .card-options{padding:0}

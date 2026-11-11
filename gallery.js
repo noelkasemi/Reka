@@ -2,7 +2,8 @@
 // so everything the CMS edits keeps working. Restaurants get the light "Atelier" skin, bars the dark "Nocturne" skin; the palette is editable.
 import {element,imageURL,sharedSlug} from './theme.js';
 import {applyLook,currentLook,lookFor,modeButton,saveChoice,MODE_KEY} from './mode.js';
-import {categoryNames,cleanSize,noteOf,initialSelection,orderDetail,orderURL,priceBlock,saleBadge} from './card.js';
+import {categoryNames,cleanSize,noteOf,initialSelection,orderDetail,orderURL,preloadPhotos,priceBlock,saleBadge} from './card.js';
+import {propertiesOf,selectedOf,pickOption,photoOf,restoreSelection,propertyText,orderParts} from './properties.js';
 import {BRANDS,profileOf,documentTitle,generalURL,listURL,logoMarkup,pageLink,linkedProductId} from './brand.js';
 
 export const GALLERY_KEYS=['gBg','gTile','gInk','gMuted','gAccent','gAccentText','gDark','gDarkText','gLine'];
@@ -97,13 +98,13 @@ function titleNode(text){
 
 export async function startGallery(catalog,mode){
  mode=skinOf(mode);
- for(const link of [...document.querySelectorAll('link[rel=stylesheet]')])if(!/loader\.css/.test(link.getAttribute('href')))link.remove();
+ for(const link of [...document.querySelectorAll('link[rel=stylesheet]')])if(!/loader\.css/.test(link.getAttribute('href'))&&!link.hasAttribute('data-fonts'))link.remove();
  await galleryStyles();
  const products=catalog.products.filter(product=>product.visible).sort((a,b)=>b.priority-a.priority);
  const brand=profileOf(catalog),byId=new Map(products.map(product=>[product.id,product])),texts=galleryTexts(catalog,mode,brand);
  const selections=new Map(),selectionOf=product=>{if(!selections.has(product.id))selections.set(product.id,initialSelection(product));return selections.get(product.id)};
  const KEY='reka-list-'+(sharedSlug()||mode);let list=[];
- try{list=JSON.parse(localStorage.getItem(KEY)||'[]').filter(item=>byId.has(item.id));for(const item of list){const selection=selectionOf(byId.get(item.id));selection.variant=item.variant??selection.variant;selection.color=item.color??selection.color}list=list.map(item=>item.id)}catch{list=[]}
+ try{list=JSON.parse(localStorage.getItem(KEY)||'[]').filter(item=>byId.has(item.id));for(const item of list)selections.set(item.id,restoreSelection(byId.get(item.id),item));list=list.map(item=>item.id)}catch{list=[]}
  let category='',query='',shown=products,sheetList=products,sheetIndex=0;
  document.title=documentTitle(brand,{design:'gallery',mode,name:catalog.name});
 
@@ -168,7 +169,7 @@ export async function startGallery(catalog,mode){
  const reveal='IntersectionObserver' in window?new IntersectionObserver(entries=>{for(const entry of entries)if(entry.isIntersecting){entry.target.classList.add('in');reveal.unobserve(entry.target)}},{rootMargin:'0px 0px -5% 0px'}):null;
  function render(){
   const q=norm(query.trim());
-  shown=products.filter(product=>(!category||category===product.category)&&norm(product.name+' '+product.description+' '+product.category+' '+product.variants.join(' ')+' '+noteOf(product)).includes(q));
+  shown=products.filter(product=>(!category||category===product.category)&&norm(product.name+' '+product.description+' '+product.category+' '+product.variants.join(' ')+' '+propertyText(product)+' '+noteOf(product)).includes(q));
   const grouped=!category&&!q,groups=new Map();
   if(grouped)for(const name of names)groups.set(name,[]);for(const product of shown){const key=grouped?product.category:'';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(product)}for(const [key,items] of groups)if(!items.length)groups.delete(key);
   host.replaceChildren();let index=0;
@@ -195,8 +196,8 @@ export async function startGallery(catalog,mode){
  }
  const choice=(values,selection,key,label,onChange)=>{
   const box=E('div','g-opt',E('span','g-opt-label',label)),row=E('div','g-chips');row.setAttribute('role','radiogroup');row.setAttribute('aria-label',label);
-  for(const value of values){const chip=E('button','g-opt-chip',value);chip.type='button';chip.setAttribute('role','radio');chip.setAttribute('aria-checked',String(value===selection[key]));
-   chip.onclick=()=>{selection[key]=value;for(const item of row.children)item.setAttribute('aria-checked',String(item===chip));persist();onChange?.()};row.append(chip)}
+  for(const value of values){const chip=E('button','g-opt-chip',value);chip.type='button';chip.setAttribute('role','radio');chip.setAttribute('aria-checked',String(value===selectedOf(selection,key)));
+   chip.onclick=()=>{pickOption(selection,key,value);for(const item of row.children)item.setAttribute('aria-checked',String(item===chip));persist();onChange?.()};row.append(chip)}
   box.append(row);return box;
  };
 
@@ -210,7 +211,9 @@ export async function startGallery(catalog,mode){
  function renderSheet(){
   const product=sheetList[sheetIndex],selection=selectionOf(product);
   const closeBtn=E('button','g-x',svg(ICON.close));closeBtn.type='button';closeBtn.setAttribute('aria-label','Mbyll');closeBtn.onclick=()=>close(sheet);
-  const image=element('img');image.src=imageURL(product.image);image.alt=product.name;
+  let shown=imageURL(photoOf(product,selection));const image=element('img');image.src=shown;image.alt=product.name;
+  image.onerror=()=>{const main=imageURL(product.image);if(shown!==main){shown=main;image.src=main}};   // an option photo that cannot load shows the main photo
+  const showPhoto=()=>{const next=imageURL(photoOf(product,selection));if(next!==shown){shown=next;image.src=next}};preloadPhotos(product);
   const tile=E('div','g-sheet-tile',image,closeBtn);
   const badge=saleBadge(product,'g-sale');if(badge)tile.append(badge);
   if(sheetList.length>1){for(const [delta,icon,label] of [[-1,ICON.left,'Para'],[1,ICON.right,'Pas']]){const b=E('button','g-nav '+(delta<0?'l':'r'),svg(icon));b.type='button';b.setAttribute('aria-label',label);b.onclick=event=>{event.stopPropagation();step(delta)};tile.append(b)}}
@@ -227,8 +230,7 @@ export async function startGallery(catalog,mode){
   if(noteOf(product))body.append(E('p','g-note',noteOf(product)));
   const price=priceBlock(product,'g-price');if(price)body.append(price);
   if(product.description)body.append(E('p','g-desc',product.description));
-  if(product.variants.length)body.append(choice(product.variants.map(cleanSize),selection,'variant','Përmasa',update));
-  if(product.colors.length)body.append(choice(product.colors,selection,'color','Ngjyra',update));
+  for(const item of propertiesOf(product))body.append(choice(item.values,selection,item.key,item.name,()=>{update();showPhoto()}));
   body.append(E('div','g-actions',order,save));
   sheet.replaceChildren(E('div','g-sheet-in',E('span','g-grip'),tile,body));sync();
  }
@@ -239,11 +241,12 @@ export async function startGallery(catalog,mode){
   const head=E('div','g-dh',E('h2','','Lista ime'),Object.assign(E('button','g-x',svg(ICON.close)),{type:'button',onclick:()=>close(drawer)}));
   const rows=E('div','g-dl');
   for(const product of items){
-   const selection=selectionOf(product),row=E('div','g-item'),thumb=E('span','g-item-img',Object.assign(element('img'),{src:imageURL(product.image),alt:''}));
+   const selection=selectionOf(product),row=E('div','g-item'),thumbImg=Object.assign(element('img'),{src:imageURL(photoOf(product,selection)),alt:''}),thumb=E('span','g-item-img',thumbImg);
    const info=E('div','g-item-info',E('strong','',product.name));
-   const pick=(values,key,label)=>{const select=element('select');select.setAttribute('aria-label',label+' për '+product.name);for(const value of values)select.append(new Option(value,value));select.value=selection[key];select.onchange=()=>{selection[key]=select.value;persist();renderDrawerFoot()};return select};
-   if(product.variants.length>1||product.colors.length>1){const controls=E('div','g-item-sel');if(product.variants.length>1)controls.append(pick(product.variants.map(cleanSize),'variant','Përmasa'));if(product.colors.length>1)controls.append(pick(product.colors,'color','Ngjyra'));info.append(controls)}
-   else info.append(E('span','g-sub',[noteOf(product),selection.variant,selection.color].filter(Boolean).join(' · ')||product.category));
+   const pick=(values,key,label)=>{const select=element('select');select.setAttribute('aria-label',label+' për '+product.name);for(const value of values)select.append(new Option(value,value));select.value=selectedOf(selection,key);select.onchange=()=>{pickOption(selection,key,select.value);thumbImg.src=imageURL(photoOf(product,selection));persist();renderDrawerFoot()};return select};
+   const pickers=propertiesOf(product).filter(item=>item.values.length>1);
+   if(pickers.length){const controls=E('div','g-item-sel');for(const item of pickers)controls.append(pick(item.values,item.key,item.name));info.append(controls)}
+   else info.append(E('span','g-sub',[noteOf(product),selection.variant,selection.color,...orderParts(product,selection)].filter(Boolean).join(' · ')||product.category));
    const remove=E('button','g-rm','×');remove.type='button';remove.setAttribute('aria-label','Hiq '+product.name);remove.onclick=()=>{toggleSave(product);renderDrawer()};
    row.append(thumb,info,remove);rows.append(row);
   }

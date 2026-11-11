@@ -1,14 +1,16 @@
 import {applyTheme,element,loadCatalog,imageURL} from './theme.js';
 import {applyLook,currentLook,lookFor,modeButton,saveChoice,MODE_KEY} from './mode.js';
-import {buildOptions,cardStyleName,categoryNames,createCard,initialSelection,noteOf,orderURL,priceBlock,saleBadge} from './card.js';
+import {buildOptions,cardStyleName,categoryNames,createCard,initialSelection,noteOf,orderURL,preloadPhotos,priceBlock,saleBadge} from './card.js';
+import {photoOf,propertyText} from './properties.js';
 import {BRANDS,profileOf,documentTitle,heroTitle,generalURL,logoMarkup,linkedProductId} from './brand.js';
+import {customCardOf} from './customcard.js';
 
 // Classic page design. app.js loads the catalog once and passes it in; mode is "restaurant" or "bars".
 export async function startClassic(preloaded,mode){
 
 const $=selector=>document.querySelector(selector);
 const norm=value=>String(value||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
-let products=[],category='',style='slate',order=[],brand=BRANDS.reka;
+let products=[],category='',style='slate',order=[],brand=BRANDS.reka,custom=null;
 const selections=new Map(),nodes=new Map();
 const sheet=$('#sheet'),host=$('#products'),filters=$('#filters'),search=$('#search');
 
@@ -17,7 +19,7 @@ const EMPTY_ICON='<svg class="empty-icon" viewBox="0 0 64 64" aria-hidden="true"
 const selectionOf=product=>{if(!selections.has(product.id))selections.set(product.id,initialSelection(product));return selections.get(product.id)};
 
 function cardFor(product,eager=false){
- const card=createCard(product,{style,selection:selectionOf(product),eager,onOpen:openSheet,brand});
+ const card=createCard(product,{style,selection:selectionOf(product),eager,onOpen:openSheet,brand,custom});
  nodes.set(product.id,card);
  if(reveal){card.classList.add('reveal');reveal.observe(card)}
  return card;
@@ -25,7 +27,7 @@ function cardFor(product,eager=false){
 
 function render(){
  const query=norm(search.value.trim());
- const shown=products.filter(product=>(!category||category===product.category)&&norm(product.name+' '+product.description+' '+product.category+' '+product.variants.join(' ')+' '+noteOf(product)).includes(query));
+ const shown=products.filter(product=>(!category||category===product.category)&&norm(product.name+' '+product.description+' '+product.category+' '+product.variants.join(' ')+' '+propertyText(product)+' '+noteOf(product)).includes(query));
  const grouped=!category&&!query,groups=new Map();
  if(grouped)for(const name of order)groups.set(name,[]);for(const product of shown){const key=grouped?product.category:'';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(product)}for(const [key,items] of groups)if(!items.length)groups.delete(key);
  host.replaceChildren();nodes.clear();
@@ -66,7 +68,10 @@ function setCategory(name){category=name;for(const button of filters.children)bu
 function openSheet(product){
  const selection=selectionOf(product);
  const close=element('button','×','sheet-close');close.type='button';close.setAttribute('aria-label','Mbyll');close.onclick=()=>sheet.close();
- const picture=element('div','','sheet-image'),image=element('img');image.src=imageURL(product.image);image.alt=product.name;picture.append(image,close);
+ const picture=element('div','','sheet-image'),image=element('img');let shown=imageURL(photoOf(product,selection));image.src=shown;image.alt=product.name;picture.append(image,close);
+ image.onerror=()=>{const main=imageURL(product.image);if(shown!==main){shown=main;image.src=main}};   // an option photo that cannot load shows the main photo
+ const showPhoto=()=>{const next=imageURL(photoOf(product,selection));if(next!==shown){shown=next;image.src=next}};
+ preloadPhotos(product);
  const badge=saleBadge(product);if(badge)picture.append(badge);
  const order=element('a','','order');order.target='_blank';order.rel='noopener';order.append(element('span','Porosit në WhatsApp'));
  const update=()=>{order.href=orderURL(product,selection,brand)};update();
@@ -75,7 +80,7 @@ function openSheet(product){
  if(noteOf(product))body.append(element('p',noteOf(product),'sheet-note'));
  const price=priceBlock(product);if(price)body.append(price);
  if(product.description)body.append(element('p',product.description,'sheet-desc'));
- body.append(buildOptions(product,selection,update),order);
+ body.append(buildOptions(product,selection,()=>{update();showPhoto()}),order);
  const inner=element('div','','sheet-inner');inner.append(picture,body);
  sheet.replaceChildren(inner);sheet.showModal();
  sheet.onclose=()=>{const old=nodes.get(product.id);if(old)old.replaceWith(cardFor(product))};
@@ -106,6 +111,8 @@ try{
  // Light or dark: the catalogue's own look unless the visitor chose otherwise (button in the header).
  const look=lookFor(catalog,'classic'),paint=dark=>{applyTheme(look.themes[dark?'dark':'light']);applyLook(dark)},dark0=currentLook(look)==='dark';
  paint(dark0);style=cardStyleName(catalog.cardStyle);
+ // The custom card (Forma e kartës > Custom design): its settings from the catalogue; without valid ones the Hark card is used.
+ custom=customCardOf(catalog);if(style==='custom'&&!custom)style='slate';
  if(look.toggle){const wa=$('.wa-pill'),group=element('div','','top-actions');wa.replaceWith(group);group.append(modeButton({dark:dark0,onToggle:dark=>{saveChoice(MODE_KEY,dark?'dark':'light');paint(dark)}}),wa)}
  document.title=documentTitle(brand,{design:'classic',mode,name:catalog.name});$('#title').innerHTML=heroTitle(brand,mode)+'<span>.</span>';
  products=catalog.products.filter(product=>product.visible).sort((a,b)=>b.priority-a.priority);
