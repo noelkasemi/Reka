@@ -1,3 +1,4 @@
+import {fontVars,fontsHref} from './fonts.js';
 // Dark and light looks for the customer pages: pure colour functions plus tiny storage helpers. Nothing here touches the DOM when the file loads.
 // A dark look is derived from the catalogue's own palette: same hues, fixed dark lightness, then every text/background pair is nudged until it reads.
 
@@ -89,6 +90,14 @@ export const MODE_KEY='reka-color-mode';
 // The look to show: the visitor's saved choice, otherwise the catalogue's own look. A page without a toggle (dark Klasik palette) always shows its own look.
 // The browser's own dark-mode setting is never used.
 export const currentLook=look=>look.toggle?readChoice(MODE_KEY)||look.base:look.base;
+// The CMS font choice ("Shkrimi"): sets --font-heading / --font-body on a root (the page, or the CMS preview stage), removes the ones no longer chosen,
+// and adds the Google stylesheet for the chosen fonts once. Nothing chosen: nothing set, nothing loaded (the designs keep their own fonts).
+export function applyFonts(root,fonts){
+ for(const name of ['--font-heading','--font-body'])root.style.removeProperty(name);
+ for(const [name,value] of Object.entries(fontVars(fonts)))root.style.setProperty(name,value);
+ const href=fontsHref(fonts);
+ if(href&&!document.querySelector('link[data-fonts][href="'+href+'"]')){const link=document.createElement('link');link.rel='stylesheet';link.href=href;link.dataset.fonts='';document.head.append(link)}
+}
 export function applyLook(dark){
  const root=document.documentElement;root.dataset.look=dark?'dark':'light';
  // The page draws its own light and dark looks, so it tells browsers not to darken it a second time: 'dark' says the page already is dark,
