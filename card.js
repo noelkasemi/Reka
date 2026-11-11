@@ -3,7 +3,7 @@ import {element,imageURL} from './theme.js';
 import {BRANDS,waHref as brandWaHref,orderURL as brandOrderURL,pageLink} from './brand.js';
 import {priceOf,formatPrice} from './price.js';
 import {customCardVars} from './customcard.js';
-import {cleanSize,initialSelection,propertiesOf,selectedOf,pickOption,photoOf,photoPaths,orderParts,hasPopupChoices} from './properties.js';
+import {cleanSize,initialSelection,propertiesOf,selectedOf,pickOption,photoOf,photoPaths,orderParts,hasPopupChoices,priceFor,hasOptionPrices} from './properties.js';
 export {cleanSize,initialSelection};   // the size/selection rules live in properties.js (shared with the server and the CMS)
 
 export const PHONE=BRANDS.reka.phone;
@@ -21,17 +21,34 @@ export const orderURL=(product,selection,profile=BRANDS.reka)=>brandOrderURL(pro
 
 // Discounts. The price row of a card or popup: the price alone, or the old price struck through next to the discounted one.
 // "prefix" is the design's class prefix (price, g-price, m-price); the percent badge is separate (saleBadge) because it sits on the photo.
-export function priceBlock(product,prefix='price'){
- const info=priceOf(product);if(!info)return null;
+// With a selection the price of the selected option is shown (properties.js priceFor); without one, the product's own price, as always.
+export function priceBlock(product,prefix='price',selection){
+ const info=selection?priceFor(product,selection):priceOf(product);if(!info)return null;
  const row=element('span','',prefix),hidden=text=>element('span',text,prefix+'-vh');
  if(info.sale===null){row.append(element('b',formatPrice(info.price),prefix+'-now'));return row}
  row.append(hidden('Çmimi i mëparshëm: '),element('s',formatPrice(info.price),prefix+'-old'),' ',hidden('Çmimi me zbritje: '),element('b',formatPrice(info.sale),prefix+'-now'));
  return row;
 }
 // "-15%" (rounded up, see price.js), or null when the product has no discount.
-export function saleBadge(product,cls='sale-badge'){
- const info=priceOf(product);if(!info||info.sale===null)return null;
+export function saleBadge(product,cls='sale-badge',selection){
+ const info=selection?priceFor(product,selection):priceOf(product);if(!info||info.sale===null)return null;
  const badge=element('span','-'+info.percent+'%',cls);badge.setAttribute('aria-label','Zbritje '+info.percent+'%');return badge;
+}
+
+// Keeps the price row and the discount badge of a product in step with the selection. Returns {row, badge, refresh}: the row and the badge for the current selection
+// (null when there is none; the caller puts them where they always were), and refresh(), which redraws them in place after the selection changed (placePrice(row) and
+// placeBadge(badge) insert one that did not exist before). A product without option prices never changes, so refresh does nothing for it.
+export function priceSync(product,selection,{prefix='price',badgeClass='sale-badge',placePrice,placeBadge}){
+ const make=()=>[priceBlock(product,prefix,selection),saleBadge(product,badgeClass,selection)],dynamic=hasOptionPrices(product),state={};
+ [state.row,state.badge]=make();
+ state.refresh=()=>{
+  if(!dynamic)return;
+  const [row,badge]=make();
+  if(state.row&&row)state.row.replaceWith(row);else if(state.row)state.row.remove();else if(row)placePrice(row);
+  if(state.badge&&badge)state.badge.replaceWith(badge);else if(state.badge)state.badge.remove();else if(badge)placeBadge(badge);
+  state.row=row;state.badge=badge;
+ };
+ return state;
 }
 
 // Fades the right edge of a chip row only when it actually scrolls.
@@ -79,7 +96,6 @@ export function createCard(product,{style='slate',selection=initialSelection(pro
  const showPhoto=()=>{const next=imageURL(photoOf(product,selection));if(next!==shown){shown=next;image.src=next}};
  if(image.complete&&image.naturalWidth)ready();
  picture.append(image);
- const badge=saleBadge(product);if(badge)picture.append(badge);
  const title=element('h3',product.name);title.title=product.name;
  const choices=hasPopupChoices(product);   // a colour or a custom property to choose: the order button opens the popup, where it is chosen
  const order=element('a','','order'),label=element('span',choices&&onOpen?(product.colors.length?'Zgjidh ngjyrën':'Zgjidh opsionet'):'Porosit');
@@ -92,7 +108,9 @@ export function createCard(product,{style='slate',selection=initialSelection(pro
   title.classList.add('is-link');title.onclick=()=>onOpen(product);
   if(choices)order.onclick=event=>{event.preventDefault();onOpen(product)};
  }
- const price=priceBlock(product);
- body.append(title,element('p',subtitle(product),'card-note'),...(price?[price]:[]),buildOptions(product,selection,()=>{update();showPhoto();onSelect?.()},{compact:true}),order);
+ const note=element('p',subtitle(product),'card-note');
+ const prices=priceSync(product,selection,{placePrice:row=>note.after(row),placeBadge:badge=>picture.append(badge)});   // the price row and the badge follow the selected option
+ body.append(title,note,buildOptions(product,selection,()=>{update();showPhoto();prices.refresh();onSelect?.()},{compact:true}),order);
+ if(prices.row)note.after(prices.row);if(prices.badge)picture.append(prices.badge);
  update();card.append(picture,body);return card;
 }
