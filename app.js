@@ -1,10 +1,14 @@
 import {loadCatalog} from './theme.js';
+import {applyFonts} from './mode.js';
+import {fontsOf} from './fonts.js';
 
 // Picks the page design. The CMS ("Dizajni i faqes") stores it as catalog.layout; ?layout=martini|gallery|classic previews another one without publishing.
 const params=new URLSearchParams(location.search);
 const requested=params.get('catalog')||document.body.dataset.catalog;
 let catalog=null;
 try{catalog=await loadCatalog(requested)}catch(error){console.error(error)}
+// The fonts chosen in the CMS (Shkrimi), applied before the design starts so the first paint already uses them.
+if(catalog)applyFonts(document.documentElement,fontsOf(catalog));
 // Custom catalogues carry their own skin; Restaurant and Bars are chosen by the page.
 const mode=(catalog?.skin||requested)==='bars'?'bars':'restaurant';
 if(catalog&&(params.get('layout')||catalog.layout)==='martini'){

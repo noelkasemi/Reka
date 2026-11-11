@@ -2,6 +2,7 @@
 // Business details are fixed in this design on purpose: the CMS has no fields for them.
 import {contrast,luminance,fit,lighten} from './mode.js';
 import {BRANDS,MARTINI,waHref as brandWaHref,orderURL as brandOrderURL,listURL as brandListURL,generalURL as brandGeneralURL,pageLink} from './brand.js';
+import {cleanSize,orderParts,propertyText} from './properties.js';
 
 // The fixed details and the message wording live in brand.js (shared with the other designs and the CMS); this file re-exports what the Martini design uses.
 export {MARTINI};
@@ -48,7 +49,7 @@ export function martiniTokens(theme){
 // Hero picks: products starred in the CMS first, topped up with the others, at most n.
 export const spotlightOf=(products,n=5)=>[...products.filter(product=>product.featured),...products.filter(product=>!product.featured)].slice(0,n);
 export const fold=text=>String(text??'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
-const haystack=product=>fold([product.name,product.category,product.description,product.note,...(product.variants||[]),...(product.colors||[])].filter(Boolean).join(' '));
+const haystack=product=>fold([product.name,product.category,product.description,product.note,...(product.variants||[]),...(product.colors||[]),propertyText(product)].filter(Boolean).join(' '));
 // Visible products in the category whose text contains every word of the query (plain substring, never a RegExp); highest priority first, otherwise catalogue order.
 export function searchProducts(products,{query,category}){
  const words=fold(query).split(/\s+/).filter(Boolean);
@@ -67,10 +68,10 @@ export function splitDescription(text){
 
 // ---- WhatsApp messages ----
 const GENERIC_NOTE=/^sipas katalogut$/i;
-export const cleanSize=value=>String(value).replace(/^[Øø]\s*/,'').trim();
+export {cleanSize};   // one definition for every design (properties.js)
 export const noteOf=product=>GENERIC_NOTE.test(product.note||'')?'':(product.note||'');
 export const waHref=text=>brandWaHref(BRANDS.martini,text);
-export const orderLine=(product,selection)=>[product.name,noteOf(product),cleanSize(selection?.variant||''),selection?.color].filter(Boolean).join(' · ');
+export const orderLine=(product,selection)=>[product.name,noteOf(product),cleanSize(selection?.variant||''),selection?.color,...orderParts(product,selection)].filter(Boolean).join(' · ');
 export const orderURL=(product,selection)=>brandOrderURL(BRANDS.martini,orderLine(product,selection),pageLink(product));
 export const listURL=items=>brandListURL(BRANDS.martini,items.map(({product,selection})=>({text:orderLine(product,selection),link:pageLink(product)})));
 export const generalURL=()=>brandGeneralURL(BRANDS.martini);
@@ -80,7 +81,9 @@ export function readList(storage,key,validIds){
  try{
   const data=JSON.parse(storage.getItem(key)||'[]'),seen=new Set();
   if(!Array.isArray(data))return [];
-  return data.filter(item=>item&&typeof item==='object'&&validIds.has(item.id)&&!seen.has(item.id)&&seen.add(item.id)).map(item=>({id:item.id,variant:String(item.variant??''),color:String(item.color??'')}));
+  return data.filter(item=>item&&typeof item==='object'&&validIds.has(item.id)&&!seen.has(item.id)&&seen.add(item.id)).map(item=>({id:item.id,variant:String(item.variant??''),color:String(item.color??''),
+   ...(item.props&&typeof item.props==='object'&&!Array.isArray(item.props)?{props:Object.fromEntries(Object.entries(item.props).filter(([,value])=>typeof value==='string'))}:{}),   // custom properties (properties.js); old items have none
+   ...(Array.isArray(item.recent)?{recent:item.recent.filter(key=>typeof key==='string')}:{})}));
  }catch{return []}
 }
 export function saveList(storage,key,items){try{storage.setItem(key,JSON.stringify(items))}catch{}}

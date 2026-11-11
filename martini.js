@@ -3,7 +3,8 @@
 import {element,imageURL,sharedSlug} from './theme.js';
 import {applyLook,currentLook,lookFor,luminance,modeButton,saveChoice,MODE_KEY} from './mode.js';
 import {MARK_SVG,linkedProductId} from './brand.js';
-import {priceBlock,saleBadge} from './card.js';
+import {preloadPhotos,priceBlock,saleBadge} from './card.js';
+import {initialSelection,propertiesOf,selectedOf,pickOption,photoOf,restoreSelection,orderParts} from './properties.js';
 import {MARTINI,MARTINI_DEFAULTS,MARTINI_PRESETS,MARTINI_TEXTS,martiniTheme,martiniTexts,martiniTokens,spotlightOf,searchProducts,categoryNames,groupByCategory,splitDescription,cleanSize,noteOf,orderLine,orderURL,listURL,generalURL,readList,saveList} from './martini-core.js';
 
 export {MARTINI_DEFAULTS,MARTINI_PRESETS,MARTINI_TEXTS,martiniTheme,martiniTexts};
@@ -79,7 +80,7 @@ export function createMartiniMock(stage,{theme,products,cards=products.slice(0,2
 }
 
 export async function startMartini(catalog){
- for(const link of [...document.querySelectorAll('link[rel=stylesheet]')])if(!/loader\.css/.test(link.getAttribute('href')))link.remove();
+ for(const link of [...document.querySelectorAll('link[rel=stylesheet]')])if(!/loader\.css/.test(link.getAttribute('href'))&&!link.hasAttribute('data-fonts'))link.remove();
  await martiniStyles();
  const products=catalog.products.filter(product=>product.visible).sort((a,b)=>b.priority-a.priority);
  const texts=martiniTexts(catalog),names=categoryNames(catalog,products),reduceMotion=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -89,9 +90,9 @@ export async function startMartini(catalog){
  // Saved list ("Lista ime"): remembered in the browser per catalogue; hearts, header count and floating button always follow `list`.
  const byId=new Map(products.map(product=>[product.id,product])),KEY='martini-list-'+(sharedSlug()||'martini'),selections=new Map();
  let store=null;try{store=localStorage}catch{}   // even reading `localStorage` can throw when storage is blocked
- const selectionOf=product=>{if(!selections.has(product.id))selections.set(product.id,{variant:cleanSize(product.variants?.[0]||''),color:product.colors?.[0]||''});return selections.get(product.id)};
+ const selectionOf=product=>{if(!selections.has(product.id))selections.set(product.id,initialSelection(product));return selections.get(product.id)};
  const savedItems=readList(store,KEY,new Set(byId.keys()));
- for(const item of savedItems){const product=byId.get(item.id),selection=selectionOf(product);if((product.variants||[]).map(cleanSize).includes(item.variant))selection.variant=item.variant;if((product.colors||[]).includes(item.color))selection.color=item.color}   // a size or colour that no longer exists falls back to the first
+ for(const item of savedItems)selections.set(item.id,restoreSelection(byId.get(item.id),item));   // a size, colour or custom value that no longer exists falls back to the first
  let list=savedItems.map(item=>item.id);
  const persist=()=>saveList(store,KEY,list.map(id=>({id,...selectionOf(byId.get(id))})));
  const toggleSave=product=>{list=list.includes(product.id)?list.filter(id=>id!==product.id):[...list,product.id];persist();sync()};
@@ -212,8 +213,8 @@ export async function startMartini(catalog){
  }
  const choice=(values,selection,key,label,onChange)=>{
   const box=E('div','m-opt',E('span','m-opt-label',label)),row=E('div','m-opt-row');row.setAttribute('role','radiogroup');row.setAttribute('aria-label',label);
-  for(const value of values){const chip=E('button','m-opt-chip',value);chip.type='button';chip.setAttribute('role','radio');chip.setAttribute('aria-checked',String(value===selection[key]));
-   chip.onclick=()=>{selection[key]=value;for(const item of row.children)item.setAttribute('aria-checked',String(item===chip));persist();onChange?.()};row.append(chip)}
+  for(const value of values){const chip=E('button','m-opt-chip',value);chip.type='button';chip.setAttribute('role','radio');chip.setAttribute('aria-checked',String(value===selectedOf(selection,key)));
+   chip.onclick=()=>{pickOption(selection,key,value);for(const item of row.children)item.setAttribute('aria-checked',String(item===chip));persist();onChange?.()};row.append(chip)}
   // radio-group keys: arrows move the choice inside the group, and must not step to another product
   row.addEventListener('keydown',event=>{
    const forward=event.key==='ArrowRight'||event.key==='ArrowDown',back=event.key==='ArrowLeft'||event.key==='ArrowUp';
@@ -232,8 +233,12 @@ export async function startMartini(catalog){
   const specs=[...rows];
   if(variants.length===1&&!rows.some(([label])=>label==='Përmasa'))specs.push(['Përmasa',variants[0]]);
   if(colors.length===1&&!rows.some(([label])=>label==='Ngjyra'))specs.push(['Ngjyra',colors[0]]);
+  const custom=propertiesOf(product).filter(item=>item.key.startsWith('p:'));
+  for(const item of custom)if(item.values.length===1&&!rows.some(([label])=>label===item.name))specs.push([item.name,item.values[0]]);   // a custom property with one value is a spec line, like a single size or colour
   const photo=E('div','m-sh-ph'),closeBtn=E('button','m-x','×');closeBtn.type='button';closeBtn.setAttribute('aria-label','Mbyll');closeBtn.onclick=()=>close(sheet);
-  if(product.image){const image=new Image();image.alt=product.name;image.src=imageURL(product.image);photo.append(image)}else{photo.classList.add('empty');photo.dataset.initial=(product.category||product.name||'?')[0]}
+  let shown=photoOf(product,selection),image=null;   // the photo of the selected option, else the main photo (properties.js)
+  if(shown){image=new Image();image.alt=product.name;image.src=imageURL(shown);image.onerror=()=>{if(shown!==product.image){shown=product.image;image.src=imageURL(shown)}};photo.append(image)}else{photo.classList.add('empty');photo.dataset.initial=(product.category||product.name||'?')[0]}   // an option photo that cannot load shows the main photo
+  const showPhoto=()=>{const next=photoOf(product,selection);if(image&&next&&next!==shown){shown=next;image.src=imageURL(next)}};preloadPhotos(product);
   photo.append(closeBtn);
   const badge=saleBadge(product,'m-sale');if(badge)photo.append(badge);
   if(sheetList.length>1){
@@ -251,8 +256,10 @@ export async function startMartini(catalog){
   if(text)body.append(E('p','m-desc',text));
   const order=E('a','m-btn mint',svg(ICON.chat),E('span','','Porosit në WhatsApp'));order.target='_blank';order.rel='noopener';
   const update=()=>{order.href=orderURL(product,selection);order.setAttribute('aria-label','Porosit '+orderLine(product,selection)+' në WhatsApp')};update();
-  if(variants.length>1)body.append(choice(variants,selection,'variant','Përmasa',update));
-  if(colors.length>1)body.append(choice(colors,selection,'color','Ngjyra',update));
+  const changed=()=>{update();showPhoto()};
+  if(variants.length>1)body.append(choice(variants,selection,'variants','Përmasa',changed));
+  if(colors.length>1)body.append(choice(colors,selection,'colors','Ngjyra',changed));
+  for(const item of custom)if(item.values.length>1)body.append(choice(item.values,selection,item.key,item.name,changed));
   const save=E('button','m-btn ghost m-save',svg(ICON.heart),E('span','','Ruaj në listë'));save.type='button';save.onclick=()=>toggleSave(product);
   body.append(E('div','m-acts',order,save));
   sheet.setAttribute('aria-labelledby','m-sh-name');sheet.removeAttribute('aria-label');
@@ -270,10 +277,11 @@ export async function startMartini(catalog){
   send.onclick=event=>{if(!items.length)event.preventDefault()};
   for(const product of items){
    const selection=selectionOf(product),thumb=E('span','m-item-img'),info=E('div','',E('strong','',product.name)),variants=(product.variants||[]).map(cleanSize),colors=product.colors||[];
-   if(product.image){const image=new Image();image.alt='';image.src=imageURL(product.image);thumb.append(image)}
-   const pick=(values,key,label)=>{const select=element('select');select.setAttribute('aria-label',label+' për '+product.name);for(const value of values)select.append(new Option(value,value));select.value=selection[key];select.onchange=()=>{selection[key]=select.value;persist();refreshSend()};return select};
-   if(variants.length>1||colors.length>1){const controls=E('div','m-sel');if(variants.length>1)controls.append(pick(variants,'variant','Përmasa'));if(colors.length>1)controls.append(pick(colors,'color','Ngjyra'));info.append(controls)}
-   else info.append(E('span','m-sub',[noteOf(product),selection.variant,selection.color].filter(Boolean).join(' · ')||product.category));
+   const thumbSource=photoOf(product,selection);let thumbImg=null;if(thumbSource){thumbImg=new Image();thumbImg.alt='';thumbImg.src=imageURL(thumbSource);thumb.append(thumbImg)}
+   const pick=(values,key,label)=>{const select=element('select');select.setAttribute('aria-label',label+' për '+product.name);for(const value of values)select.append(new Option(value,value));select.value=selectedOf(selection,key);select.onchange=()=>{pickOption(selection,key,select.value);const next=photoOf(product,selection);if(thumbImg&&next)thumbImg.src=imageURL(next);persist();refreshSend()};return select};
+   const pickers=propertiesOf(product).filter(item=>item.values.length>1);
+   if(pickers.length){const controls=E('div','m-sel');for(const item of pickers)controls.append(pick(item.values,item.key,item.name));info.append(controls)}
+   else info.append(E('span','m-sub',[noteOf(product),selection.variant,selection.color,...orderParts(product,selection)].filter(Boolean).join(' · ')||product.category));
    const remove=E('button','m-rm','×');remove.type='button';remove.setAttribute('aria-label','Hiq '+product.name);
    remove.onclick=()=>{toggleSave(product);renderDrawer();(drawer.querySelector('.m-rm')||drawer.querySelector('.m-x')).focus()};
    rows.append(E('div','m-item',thumb,info,remove));

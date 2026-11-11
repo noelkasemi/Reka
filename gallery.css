@@ -1,9 +1,9 @@
 /* "Galeri" design. Everything is scoped under .g so it can also render inside the CMS preview.
    Palette comes from --gBg/--gTile/--gInk/--gMuted/--gAccent/--gAccentText/--gDark/--gDarkText/--gLine (set by gallery.js).
    Skins: data-skin="restaurant" (Atelier, paper + serif) and data-skin="bars" (Nocturne, dark + sharp). */
-.g{--disp:'Fraunces',Georgia,serif;--body:'Inter',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;--r:22px;--topH:60px;
+.g{--disp:var(--font-heading,'Fraunces',Georgia,serif);--body:var(--font-body,'Inter',system-ui,-apple-system,'Segoe UI',Arial,sans-serif);--r:22px;--topH:60px;
  min-height:100vh;background:var(--gBg);color:var(--gInk);font:400 16px/1.5 var(--body);-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;overflow-x:clip}
-.g[data-skin=bars]{--disp:'Bricolage Grotesque','Inter',system-ui,sans-serif;--r:14px}
+.g[data-skin=bars]{--disp:var(--font-heading,'Bricolage Grotesque','Inter',system-ui,sans-serif);--r:14px}
 .g *,.g *::before,.g *::after{box-sizing:border-box}
 .g :where(h1,h2,h3,p,small,strong,ul){margin:0}
 .g :where(button,input,select){font:inherit;color:inherit}

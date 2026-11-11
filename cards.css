@@ -1,6 +1,6 @@
 /* Product cards: three shapes (slate arch, ornate notched frame, classic) sharing one structure. Mobile-first. */
 .grid,.mock-grid{container-type:inline-size}
-.card{position:relative;display:flex;flex-direction:column;min-width:0;font-family:Georgia,'Times New Roman',serif;-webkit-tap-highlight-color:transparent}
+.card{position:relative;display:flex;flex-direction:column;min-width:0;font-family:var(--font-heading,Georgia,'Times New Roman',serif);-webkit-tap-highlight-color:transparent}
 .card *{font-family:inherit}
 .product-image{position:relative;display:flex;align-items:center;justify-content:center;background:none}
 .product-image img{width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .3s ease}
@@ -9,10 +9,10 @@
 .card-body{display:flex;flex:1;flex-direction:column;min-width:0}
 .card h3{margin:0;font-weight:700;font-size:14px;line-height:1.2;letter-spacing:.01em;text-transform:uppercase;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;min-height:2.4em}
 .card[data-title=long] h3{font-size:12.5px}
-.card-note{margin:4px 0 0;min-height:1.3em;font:400 11.5px/1.3 Arial,Helvetica,sans-serif;opacity:.78;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-note{margin:4px 0 0;min-height:1.3em;font:400 11.5px/1.3 var(--font-body,Arial,Helvetica,sans-serif);opacity:.78;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card-options{margin-top:auto;padding-top:12px;display:grid;gap:10px}
-.order{display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;margin-top:12px;border-radius:10px;font:700 14px/1 Arial,Helvetica,sans-serif;text-decoration:none;transition:transform .15s,filter .15s,box-shadow .15s}
-.order span{font-family:Arial,Helvetica,sans-serif}
+.order{display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;margin-top:12px;border-radius:10px;font:700 14px/1 var(--font-body,Arial,Helvetica,sans-serif);text-decoration:none;transition:transform .15s,filter .15s,box-shadow .15s}
+.order span{font-family:var(--font-body,Arial,Helvetica,sans-serif)}
 .order:hover{transform:translateY(-1px);filter:brightness(1.07)}.order:active{transform:scale(.98)}
 .order svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .is-link{cursor:pointer}
@@ -21,11 +21,11 @@
 
 /* Option chips (replace raw dropdowns). Colors come from the card style / sheet via --chip-* */
 .opt{display:grid;gap:5px;min-width:0}
-.opt-label{font:700 9.5px/1 Arial,Helvetica,sans-serif;letter-spacing:.14em;text-transform:uppercase;opacity:.72}
+.opt-label{font:700 9.5px/1 var(--font-body,Arial,Helvetica,sans-serif);letter-spacing:.14em;text-transform:uppercase;opacity:.72}
 .chips{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;padding:2px;margin:0 -2px}
 .chips::-webkit-scrollbar{display:none}
 .chips.is-scroll{-webkit-mask:linear-gradient(90deg,#000 calc(100% - 22px),#0000);mask:linear-gradient(90deg,#000 calc(100% - 22px),#0000)}
-.chip{flex:none;scroll-snap-align:start;min-height:34px;padding:0 12px;border:1px solid var(--chip-line);border-radius:999px;background:var(--chip-bg);color:var(--chip-text);font:700 12px/1 Arial,Helvetica,sans-serif;white-space:nowrap;cursor:pointer;transition:background .15s,color .15s,transform .1s}
+.chip{flex:none;scroll-snap-align:start;min-height:34px;padding:0 12px;border:1px solid var(--chip-line);border-radius:999px;background:var(--chip-bg);color:var(--chip-text);font:700 12px/1 var(--font-body,Arial,Helvetica,sans-serif);white-space:nowrap;cursor:pointer;transition:background .15s,color .15s,transform .1s}
 .chip:active{transform:scale(.95)}
 .chip[aria-checked=true]{background:var(--chip-on);border-color:var(--chip-on);color:var(--chip-on-text)}
 .chip.static{display:inline-flex;align-items:center;border-style:dashed;background:none;cursor:default;opacity:.8}
@@ -67,10 +67,100 @@ html[data-look=dark] .card.slate .product-image{background:var(--image);border-r
 @media(prefers-reduced-motion:reduce){.product-image:not(.ready)::before{animation:none}.product-image img{transition:none}}
 
 /* Discounts: a red "-15%" badge on the photo, the old price struck through, the discounted price bold. The badge colour is fixed (not part of the palette). */
-.sale-badge{position:absolute;left:8px;top:8px;z-index:3;padding:4px 9px;border-radius:8px;background:#c8372d;color:#fff;font:800 12px/1 Arial,Helvetica,sans-serif;letter-spacing:.02em;box-shadow:0 2px 6px #0003;pointer-events:none}
-.price{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;margin:6px 0 0;font:700 14px/1.2 Arial,Helvetica,sans-serif}
+.sale-badge{position:absolute;left:8px;top:8px;z-index:3;padding:4px 9px;border-radius:8px;background:#c8372d;color:#fff;font:800 12px/1 var(--font-body,Arial,Helvetica,sans-serif);letter-spacing:.02em;box-shadow:0 2px 6px #0003;pointer-events:none}
+.price{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;margin:6px 0 0;font:700 14px/1.2 var(--font-body,Arial,Helvetica,sans-serif)}
 .price-old{font-weight:400;font-size:13px;opacity:.78;text-decoration:line-through}
 .price-now{font-weight:800;font-size:15px}
 .price-vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .card.slate .price{justify-content:center}
 .sheet-body .price{margin:0;font-size:18px}.sheet-body .price-old{font-size:14px}.sheet-body .price-now{font-size:20px}
+
+/* Custom card ("Custom design"): the same card, drawn from the owner's settings. customCardVars (customcard.js) sets the --cc-* variables and the data-*
+   attributes on the card; every option of every setting has its rule here (tests/customcard-css.test.mjs). Colours are the card's own, not the page palette. */
+.card.custom{--chip-bg:color-mix(in srgb,var(--cc-text) 8%,transparent);--chip-line:color-mix(in srgb,var(--cc-text) 35%,transparent);--chip-text:var(--cc-text);--chip-on:var(--cc-btbg);--chip-on-text:var(--cc-btc);box-sizing:border-box;padding:var(--cc-pad);background:var(--cc-bgimg),var(--cc-bg);color:var(--cc-text);border:var(--cc-bw) var(--cc-bs) var(--cc-bc);border-radius:var(--cc-r)}
+.card.custom h3{color:var(--cc-text)}
+.card.custom .card-body{padding:12px 2px 2px}
+.card.custom .price-now{color:var(--cc-accent)}
+
+/* Frame: corners */
+.card.custom[data-corners=round],.card.custom[data-corners=arch]{border-radius:var(--cc-r)}
+.card.custom[data-corners=arch]{--av:120px;border-radius:50% 50% var(--cc-r) var(--cc-r)/var(--av) var(--av) var(--cc-r) var(--cc-r)}
+.card.custom[data-corners=notch]{--cut:max(var(--cc-cut),1px);-webkit-mask:radial-gradient(var(--cut) at 0 0,#0000 98%,#000) 0 0/51% 51% no-repeat,radial-gradient(var(--cut) at 100% 0,#0000 98%,#000) 100% 0/51% 51% no-repeat,radial-gradient(var(--cut) at 0 100%,#0000 98%,#000) 0 100%/51% 51% no-repeat,radial-gradient(var(--cut) at 100% 100%,#0000 98%,#000) 100% 100%/51% 51% no-repeat;mask:radial-gradient(var(--cut) at 0 0,#0000 98%,#000) 0 0/51% 51% no-repeat,radial-gradient(var(--cut) at 100% 0,#0000 98%,#000) 100% 0/51% 51% no-repeat,radial-gradient(var(--cut) at 0 100%,#0000 98%,#000) 0 100%/51% 51% no-repeat,radial-gradient(var(--cut) at 100% 100%,#0000 98%,#000) 100% 100%/51% 51% no-repeat}
+.card.custom[data-corners=cut]{--k:var(--cc-cut);clip-path:polygon(var(--k) 0,calc(100% - var(--k)) 0,100% var(--k),100% calc(100% - var(--k)),calc(100% - var(--k)) 100%,var(--k) 100%,0 calc(100% - var(--k)),0 var(--k))}
+/* Frame: shadow (only rounded and arched corners: a clipped corner would cut the shadow) */
+.card.custom[data-shadow=none]{box-shadow:none}
+.card.custom[data-corners=round][data-shadow=soft],.card.custom[data-corners=arch][data-shadow=soft]{box-shadow:0 8px 22px #0000002e}
+.card.custom[data-corners=round][data-shadow=strong],.card.custom[data-corners=arch][data-shadow=strong]{box-shadow:0 16px 34px #00000052}
+.card.custom[data-corners=round][data-shadow=hard],.card.custom[data-corners=arch][data-shadow=hard]{box-shadow:5px 5px 0 var(--cc-bc)}
+/* Frame: the inner line */
+.card.custom[data-inner=on]::after{content:"";position:absolute;inset:var(--cc-inset);z-index:3;border:2px solid var(--cc-ic);border-radius:max(0px,calc(var(--cc-r) - var(--cc-inset)));pointer-events:none}
+.card.custom[data-inner=on][data-corners=arch]::after{border-radius:50% 50% 10px 10px/calc(var(--av) - var(--cc-inset)) calc(var(--av) - var(--cc-inset)) 10px 10px}
+.card.custom[data-inner=off]::after{content:none}
+
+/* Photo window: shape, colour, border, height, and inside the spacing or edge to edge. The window is not clipped (the discount badge sits on its corner): the photo itself is rounded to the shape. */
+.card.custom .product-image{box-sizing:border-box;height:var(--cc-ph);padding:8px;overflow:visible;background:var(--cc-pbg);border:var(--cc-pbw) solid var(--cc-pbc)}
+.card.custom .product-image.is-link:hover img{transform:none}
+.card.custom[data-photo=rect] .product-image{border-radius:0}
+.card.custom[data-photo=rect] .product-image img{border-radius:0}
+.card.custom[data-photo=round] .product-image{border-radius:var(--cc-pr)}
+.card.custom[data-photo=round] .product-image img{border-radius:max(0px,calc(var(--cc-pr) - 8px))}
+.card.custom[data-photo=circle] .product-image{border-radius:50%;height:auto;aspect-ratio:1;width:min(100%,var(--cc-ph));margin-inline:auto}
+.card.custom[data-photo=circle] .product-image img{border-radius:50%}
+.card.custom[data-photo=arch] .product-image{border-radius:999px 999px var(--cc-pr) var(--cc-pr)}
+.card.custom[data-photo=arch] .product-image img{border-radius:999px 999px max(0px,calc(var(--cc-pr) - 8px)) max(0px,calc(var(--cc-pr) - 8px))}
+.card.custom[data-photo-inset=on] .product-image{margin-top:0}
+.card.custom[data-photo-inset=off] .product-image{margin:calc(var(--cc-pad)*-1) calc(var(--cc-pad)*-1) 0;padding:0;border-radius:0}
+.card.custom[data-photo-inset=off] .product-image img{border-radius:0}
+.card.custom[data-photo-inset=off][data-corners=round] .product-image,.card.custom[data-photo-inset=off][data-corners=round] .product-image img{border-radius:max(0px,calc(var(--cc-r) - var(--cc-bw))) max(0px,calc(var(--cc-r) - var(--cc-bw))) 0 0}
+/* Arched frame: the photo's top follows the arch, or a square photo corner would stick out of the frame (the discount badge then sits at the photo's foot) */
+.card.custom[data-corners=arch][data-photo=rect] .product-image,.card.custom[data-corners=arch][data-photo=rect] .product-image img{border-radius:999px 999px 0 0}
+.card.custom[data-corners=arch][data-photo=round] .product-image,.card.custom[data-corners=arch][data-photo=round] .product-image img{border-radius:999px 999px max(0px,calc(var(--cc-pr) - 8px)) max(0px,calc(var(--cc-pr) - 8px))}
+.card.custom[data-corners=arch][data-photo-inset=off]:not([data-photo=circle]) .product-image,.card.custom[data-corners=arch][data-photo-inset=off]:not([data-photo=circle]) .product-image img{border-radius:50% 50% 0 0/calc(var(--av) - var(--cc-bw)) calc(var(--av) - var(--cc-bw)) 0 0}
+.card.custom[data-corners=arch] .sale-badge{top:auto;bottom:8px}
+.card.custom[data-photo-inset=off][data-photo=circle] .product-image{margin:0 auto;padding:8px;border-radius:50%}
+.card.custom[data-photo-inset=off][data-photo=circle] .product-image img{border-radius:50%}
+
+/* Text */
+.card.custom[data-align=left] .card-body{text-align:left}
+.card.custom[data-align=center] .card-body{text-align:center}
+.card.custom[data-align=center] .price,.card.custom[data-align=center] .chips{justify-content:safe center}
+.card.custom[data-upper=on] h3{text-transform:uppercase}
+.card.custom[data-upper=off] h3{text-transform:none;letter-spacing:0}
+.card.custom[data-title-size=s] h3{font-size:12px}
+.card.custom[data-title-size=m] h3{font-size:14px}
+.card.custom[data-title-size=l] h3{font-size:17px}
+.card.custom[data-title-size=l][data-title=long] h3{font-size:15px}
+
+/* Size chips */
+.card.custom[data-chips=pill] .chip{border-radius:999px}
+.card.custom[data-chips=square] .chip{border-radius:4px}
+.card.custom[data-chips=underline] .chip{padding:0 4px;border-width:0 0 2px;border-radius:0;background:none}
+.card.custom[data-chips=underline] .chip[aria-checked=true]{background:none;border-color:var(--cc-accent);color:var(--cc-accent)}
+
+/* Order button */
+.card.custom .order{border-radius:var(--cc-btr)}
+.card.custom[data-btn=filled] .order{border:2px solid var(--cc-btbg);background:var(--cc-btbg);color:var(--cc-btc)}
+.card.custom[data-btn=outline] .order{border:2px solid var(--cc-btbg);background:transparent;color:var(--cc-btbg)}
+.card.custom[data-btn=soft] .order{border:2px solid transparent;background:color-mix(in srgb,var(--cc-btbg) 16%,transparent);color:var(--cc-btbg)}
+.card.custom[data-btn-full=on] .order{align-self:stretch}
+.card.custom[data-btn-full=off] .order{align-self:center;padding:0 26px}
+.card.custom[data-btn-upper=on] .order{text-transform:uppercase;letter-spacing:.04em}
+.card.custom[data-btn-upper=off] .order{text-transform:none;letter-spacing:0}
+.card.custom[data-btn-icon=on] .order svg{display:block}
+.card.custom[data-btn-icon=off] .order svg{display:none}
+
+/* Discount badge */
+/* The badge sits 8px from the photo's corner, or further in when the frame's corner (rounded, notched or chamfered) would cut it: --bk is how far in the corner reaches */
+.card.custom[data-corners=round]{--bk:calc(var(--cc-r)*.3)}
+.card.custom[data-corners=notch],.card.custom[data-corners=cut]{--bk:calc(var(--cc-cut)*.75)}
+.card.custom[data-photo-inset=on]{--bo:max(8px,calc(var(--bk,0px) - var(--cc-pad)))}
+.card.custom[data-photo-inset=off]{--bo:max(8px,var(--bk,0px))}
+.card.custom .sale-badge{top:var(--bo,8px);background:var(--cc-badge)}
+.card.custom[data-badge-shape=pill] .sale-badge{border-radius:999px}
+.card.custom[data-badge-shape=square] .sale-badge{border-radius:4px}
+.card.custom[data-badge-side=left] .sale-badge{left:var(--bo,8px);right:auto}
+.card.custom[data-badge-side=right] .sale-badge{right:var(--bo,8px);left:auto}
+@container (min-width:600px){
+ .card.custom[data-title-size=s] h3{font-size:14px}.card.custom[data-title-size=m] h3{font-size:16px}.card.custom[data-title-size=l] h3{font-size:20px}.card.custom[data-title-size=l][data-title=long] h3{font-size:17px}
+ .card.custom .product-image{height:calc(var(--cc-ph)*1.3)}.card.custom[data-photo=circle] .product-image{height:auto;width:min(100%,calc(var(--cc-ph)*1.3))}
+}
