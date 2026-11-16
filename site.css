@@ -43,6 +43,7 @@ html[data-look=dark] .spot-card{color:#1c2f25;--muted:#5f6a5c}
 .eyebrow{margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:.24em;color:var(--gold)}
 .spot h1{margin:0;font:normal clamp(23px,6.6vw,34px)/1.12 var(--font-heading,Georgia,serif);letter-spacing:-.01em}
 .spot h1 span{color:var(--gold)}
+.spot-copy{min-width:0}.spot-intro{margin:10px 0 0;font:15px/1.5 var(--font-body,Arial,Helvetica,sans-serif);opacity:.85;overflow-wrap:break-word}
 .spot-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .spot-card{display:flex;align-items:center;gap:10px;min-width:0;padding:8px 10px 8px 8px;border:0;border-radius:14px;background:#fff;color:var(--ink);text-align:left;cursor:pointer;box-shadow:0 8px 18px #0000003d;transition:transform .2s}
 .spot-card:hover{transform:translateY(-2px)}.spot-card:active{transform:scale(.98)}

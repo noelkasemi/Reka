@@ -73,3 +73,9 @@ const esc=text=>String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(
 export const logoMarkup=profile=>{const logo=profile.logo;return logo.kind==='mark'?MARK_SVG+'<span class="m-word">MARTINI<span>&amp;</span>K</span>':'<img src="'+esc(logo.src)+'" alt="'+esc(logo.alt)+'" width="'+logo.width+'" height="'+logo.height+'">'};
 // The Klasik hero headline.
 export const heroTitle=(profile,mode)=>profile.texts?profile.texts.title:(mode==='bars'?'Pajisje profesionale për barin tuaj':'Pajisje profesionale për kuzhinën tuaj');
+// What the Klasik hero shows (page and CMS preview): the catalogue's own title and sentence (catalog.texts, "Teksti i faqes") or the ready-made headline and no sentence.
+// The gold full stop after the title is skipped when the title already ends in punctuation ("Black Friday ka Mbërritur!").
+export const heroOf=(profile,mode,texts)=>{
+ const own=key=>typeof texts?.[key]==='string'?texts[key].trim():'',title=own('title')||heroTitle(profile,mode);
+ return {title,dot:/\p{P}$/u.test(title)?'':'.',intro:own('intro')};
+};
