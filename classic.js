@@ -2,7 +2,7 @@ import {applyTheme,element,loadCatalog,imageURL} from './theme.js';
 import {applyLook,currentLook,lookFor,modeButton,saveChoice,MODE_KEY} from './mode.js';
 import {buildOptions,cardStyleName,categoryNames,createCard,initialSelection,noteOf,orderURL,preloadPhotos,priceSync} from './card.js';
 import {photoOf,propertyText} from './properties.js';
-import {BRANDS,profileOf,documentTitle,heroTitle,generalURL,logoMarkup,linkedProductId} from './brand.js';
+import {BRANDS,profileOf,documentTitle,heroOf,generalURL,logoMarkup,linkedProductId} from './brand.js';
 import {customCardOf} from './customcard.js';
 
 // Classic page design. app.js loads the catalog once and passes it in; mode is "restaurant" or "bars".
@@ -102,6 +102,12 @@ function applyBrand(profile){
  $('.copy').textContent=profile.copyright;
 }
 applyBrand(BRANDS.reka);
+// The headline (text only, never markup) and, when the catalogue has one, the sentence under it. Without a sentence the page is exactly as before.
+function renderHero({title,dot,intro}){
+ const head=$('#title');head.replaceChildren(title,element('span',dot));
+ if(!intro)return;
+ const copy=element('div','','spot-copy');head.replaceWith(copy);copy.append(head,element('p',intro,'spot-intro'));
+}
 addEventListener('scroll',()=>$('#fab').classList.toggle('show',scrollY>520),{passive:true});
 
 const waitFor=image=>image.decode().catch(()=>{});
@@ -115,7 +121,7 @@ try{
  // The custom card (Forma e kartës > Custom design): its settings from the catalogue; without valid ones the Hark card is used.
  custom=customCardOf(catalog);if(style==='custom'&&!custom)style='slate';
  if(look.toggle){const wa=$('.wa-pill'),group=element('div','','top-actions');wa.replaceWith(group);group.append(modeButton({dark:dark0,onToggle:dark=>{saveChoice(MODE_KEY,dark?'dark':'light');paint(dark)}}),wa)}
- document.title=documentTitle(brand,{design:'classic',mode,name:catalog.name});$('#title').innerHTML=heroTitle(brand,mode)+'<span>.</span>';
+ document.title=documentTitle(brand,{design:'classic',mode,name:catalog.name});renderHero(heroOf(brand,mode,catalog.texts));
  products=catalog.products.filter(product=>product.visible).sort((a,b)=>b.priority-a.priority);
  const names=order=categoryNames(catalog,products);
  for(const name of ['',...names]){
