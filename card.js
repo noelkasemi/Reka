@@ -4,6 +4,7 @@ import {BRANDS,waHref as brandWaHref,orderURL as brandOrderURL,pageLink} from '.
 import {priceOf,formatPrice} from './price.js';
 import {customCardVars} from './customcard.js';
 import {cleanSize,initialSelection,propertiesOf,selectedOf,pickOption,photoOf,photoPaths,orderParts,hasPopupChoices,priceFor,hasOptionPrices} from './properties.js';
+import {itemOf,trackLink} from './track.js';
 export {cleanSize,initialSelection};   // the size/selection rules live in properties.js (shared with the server and the CMS)
 
 export const PHONE=BRANDS.reka.phone;
@@ -108,6 +109,7 @@ export function createCard(product,{style='slate',selection=initialSelection(pro
   title.classList.add('is-link');title.onclick=()=>onOpen(product);
   if(choices)order.onclick=event=>{event.preventDefault();onOpen(product)};
  }
+ if(!(choices&&onOpen))trackLink(order,'whatsapp_order',()=>({items:[itemOf(product,selection)]}));   // a card that only opens the popup is no order
  const note=element('p',subtitle(product),'card-note');
  const prices=priceSync(product,selection,{placePrice:row=>note.after(row),placeBadge:badge=>picture.append(badge)});   // the price row and the badge follow the selected option
  body.append(title,note,buildOptions(product,selection,()=>{update();showPhoto();prices.refresh();onSelect?.()},{compact:true}),order);

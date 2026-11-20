@@ -1,4 +1,6 @@
-import {loadCatalog} from './theme.js';
+import {loadCatalog,sharedSlug} from './theme.js';
+import {profileOf} from './brand.js';
+import {startTracking,watchContacts} from './track.js';
 import {applyFonts} from './mode.js';
 import {fontsOf} from './fonts.js';
 
@@ -11,6 +13,9 @@ try{catalog=await loadCatalog(requested)}catch(error){console.error(error)}
 if(catalog)applyFonts(document.documentElement,fontsOf(catalog));
 // Custom catalogues carry their own skin; Restaurant and Bars are chosen by the page.
 const mode=(catalog?.skin||requested)==='bars'?'bars':'restaurant';
+// Google Analytics (does nothing on a page without the Google tag): which catalogue, which business and which design the events belong to.
+const layout=catalog?params.get('layout')||catalog.layout:'';
+startTracking({catalogue:sharedSlug()||document.body.dataset.catalog,business:profileOf(catalog).id,design:layout==='martini'||layout==='gallery'?layout:'classic'});watchContacts();
 if(catalog&&(params.get('layout')||catalog.layout)==='martini'){
  try{
   await (await import('./martini.js')).startMartini(catalog);
