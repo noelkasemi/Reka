@@ -5,6 +5,7 @@ import {applyLook,currentLook,lookFor,modeButton,saveChoice,MODE_KEY} from './mo
 import {categoryNames,cleanSize,noteOf,initialSelection,orderDetail,orderURL,preloadPhotos,priceBlock,priceSync,saleBadge} from './card.js';
 import {propertiesOf,selectedOf,pickOption,photoOf,restoreSelection,propertyText,orderParts} from './properties.js';
 import {BRANDS,profileOf,documentTitle,generalURL,listURL,logoMarkup,pageLink,linkedProductId} from './brand.js';
+import {itemOf,productEvent,track,trackLink,trackSearch} from './track.js';
 
 export const GALLERY_KEYS=['gBg','gTile','gInk','gMuted','gAccent','gAccentText','gDark','gDarkText','gLine'];
 export const GALLERY_DEFAULTS={
@@ -150,7 +151,7 @@ export async function startGallery(catalog,mode){
  for(const name of ['',...names]){
   const chip=E('button','g-chip',name||'Të gjitha',E('small','',String(name?products.filter(product=>product.category===name).length:products.length)));
   chip.type='button';chip.dataset.name=name;chip.setAttribute('aria-pressed',String(!name));
-  chip.onclick=()=>{category=name;for(const item of chips.children)item.setAttribute('aria-pressed',String(item===chip));chip.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});render();scrollTo({top:Math.max(0,find.offsetTop-70),behavior:'smooth'})};
+  chip.onclick=()=>{category=name;if(name)track('select_category',{category:name});for(const item of chips.children)item.setAttribute('aria-pressed',String(item===chip));chip.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});render();scrollTo({top:Math.max(0,find.offsetTop-70),behavior:'smooth'})};
   chips.append(chip);
  }
  const bar=E('div','g-bar',E('div','g-wrap',chips));bar.id='katalogu';
@@ -182,12 +183,12 @@ export async function startGallery(catalog,mode){
   count.textContent=shown.length+' produkte';clear.hidden=!query;empty.hidden=!!shown.length;
   if(!shown.length){const reset=E('button','g-btn primary','Pastro kërkimin');reset.type='button';reset.onclick=()=>{input.value=query='';category='';for(const item of chips.children)item.setAttribute('aria-pressed',String(!item.dataset.name));render()};empty.replaceChildren(E('h3','','Nuk u gjet asnjë produkt.'),E('p','','Provoni një emër tjetër ose shfaqni të gjitha kategoritë.'),reset)}
  }
- input.oninput=()=>{query=input.value;render()};
+ input.oninput=()=>{query=input.value;render();trackSearch(query)};
  clear.onclick=()=>{input.value=query='';input.focus();render()};
 
  /* ---------- saved list ---------- */
  const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(list.map(id=>({id,...selectionOf(byId.get(id))}))))}catch{}};
- function toggleSave(product){list=list.includes(product.id)?list.filter(id=>id!==product.id):[...list,product.id];persist();sync()}
+ function toggleSave(product){const adding=!list.includes(product.id);list=list.includes(product.id)?list.filter(id=>id!==product.id):[...list,product.id];persist();sync();if(adding)productEvent('add_to_wishlist',product,selectionOf(product))}
  function sync(){
   for(const heart of root.querySelectorAll('[data-save]'))heart.setAttribute('aria-pressed',String(list.includes(heart.dataset.save)));
   listBtn.lastChild.textContent=fab.querySelector('b').textContent=String(list.length);
@@ -209,7 +210,7 @@ export async function startGallery(catalog,mode){
  function openSheet(product,from=shown){sheetList=from.length?from:products;sheetIndex=Math.max(0,sheetList.indexOf(product));renderSheet();if(!sheet.open)open(sheet)}
  const step=delta=>{sheetIndex=(sheetIndex+delta+sheetList.length)%sheetList.length;renderSheet()};
  function renderSheet(){
-  const product=sheetList[sheetIndex],selection=selectionOf(product);
+  const product=sheetList[sheetIndex],selection=selectionOf(product);productEvent('view_item',product,selection);
   const closeBtn=E('button','g-x',svg(ICON.close));closeBtn.type='button';closeBtn.setAttribute('aria-label','Mbyll');closeBtn.onclick=()=>close(sheet);
   let shown=imageURL(photoOf(product,selection));const image=element('img');image.src=shown;image.alt=product.name;
   image.onerror=()=>{const main=imageURL(product.image);if(shown!==main){shown=main;image.src=main}};   // an option photo that cannot load shows the main photo
@@ -223,7 +224,7 @@ export async function startGallery(catalog,mode){
   tile.onmousemove=event=>{if(!tile.classList.contains('zoom'))return;const r=tile.getBoundingClientRect();tile.style.setProperty('--ox',(event.clientX-r.left)/r.width*100+'%');tile.style.setProperty('--oy',(event.clientY-r.top)/r.height*100+'%')};
   tile.addEventListener('touchstart',event=>{x0=event.touches[0].clientX;y0=event.touches[0].clientY},{passive:true});
   tile.addEventListener('touchend',event=>{const dx=event.changedTouches[0].clientX-x0,dy=event.changedTouches[0].clientY-y0;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5&&!tile.classList.contains('zoom'))step(dx<0?1:-1)});
-  const order=E('a','g-btn primary',svg(ICON.chat),E('span','','Porosit në WhatsApp'));order.target='_blank';order.rel='noopener';
+  const order=E('a','g-btn primary',svg(ICON.chat),E('span','','Porosit në WhatsApp'));order.target='_blank';order.rel='noopener';trackLink(order,'whatsapp_order',()=>({items:[itemOf(product,selection)]}));
   const update=()=>{order.href=orderURL(product,selection,brand)};update();
   const save=E('button','g-btn ghost g-save',svg(ICON.heart),E('span','',' Ruaj në listë'));save.type='button';save.onclick=()=>toggleSave(product);
   const body=E('div','g-sheet-body',E('small','',product.category),E('h2','',product.name));
@@ -252,7 +253,7 @@ export async function startGallery(catalog,mode){
    row.append(thumb,info,remove);rows.append(row);
   }
   if(!items.length)rows.append(E('p','g-empty-list','Lista është bosh. Shtypni ♡ te produktet që ju pëlqejnë, pastaj dërgojini të gjitha me një prekje.'));
-  const send=E('a','g-btn primary',svg(ICON.chat),E('span','','Dërgo listën në WhatsApp'));send.target='_blank';send.rel='noopener';
+  const send=E('a','g-btn primary',svg(ICON.chat),E('span','','Dërgo listën në WhatsApp'));send.target='_blank';send.rel='noopener';trackLink(send,'whatsapp_list',()=>items.length?{item_count:items.length,items:items.map(product=>itemOf(product,selectionOf(product)))}:null);
   const wipe=E('button','g-link','Pastro listën');wipe.type='button';wipe.onclick=()=>{list=[];persist();sync();renderDrawer()};
   renderDrawerFoot.update=()=>{send.href=items.length?listURL(brand,items.map(product=>({text:orderDetail(product,selectionOf(product)),link:pageLink(product)}))):'#';send.style.opacity=items.length?1:.4;send.style.pointerEvents=items.length?'':'none'};
   renderDrawerFoot();

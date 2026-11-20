@@ -2,6 +2,7 @@ import {applyTheme,element,loadCatalog,imageURL} from './theme.js';
 import {applyLook,currentLook,lookFor,modeButton,saveChoice,MODE_KEY} from './mode.js';
 import {buildOptions,cardStyleName,categoryNames,createCard,initialSelection,noteOf,orderURL,preloadPhotos,priceSync} from './card.js';
 import {photoOf,propertyText} from './properties.js';
+import {itemOf,productEvent,track,trackLink,trackSearch} from './track.js';
 import {BRANDS,profileOf,documentTitle,heroOf,generalURL,logoMarkup,linkedProductId} from './brand.js';
 import {customCardOf} from './customcard.js';
 
@@ -66,14 +67,14 @@ function resetFilters(){search.value='';setCategory('')}
 function setCategory(name){category=name;for(const button of filters.children)button.setAttribute('aria-pressed',String(button.dataset.name===name));render()}
 
 function openSheet(product){
- const selection=selectionOf(product);
+ const selection=selectionOf(product);productEvent('view_item',product,selection);
  const close=element('button','×','sheet-close');close.type='button';close.setAttribute('aria-label','Mbyll');close.onclick=()=>sheet.close();
  const picture=element('div','','sheet-image'),image=element('img');let shown=imageURL(photoOf(product,selection));image.src=shown;image.alt=product.name;picture.append(image,close);
  image.onerror=()=>{const main=imageURL(product.image);if(shown!==main){shown=main;image.src=main}};   // an option photo that cannot load shows the main photo
  const showPhoto=()=>{const next=imageURL(photoOf(product,selection));if(next!==shown){shown=next;image.src=next}};
  preloadPhotos(product);
  const prices=priceSync(product,selection,{placePrice:row=>anchor.after(row),placeBadge:badge=>picture.append(badge)});if(prices.badge)picture.append(prices.badge);
- const order=element('a','','order');order.target='_blank';order.rel='noopener';order.append(element('span','Porosit në WhatsApp'));
+ const order=element('a','','order');order.target='_blank';order.rel='noopener';order.append(element('span','Porosit në WhatsApp'));trackLink(order,'whatsapp_order',()=>({items:[itemOf(product,selection)]}));
  const update=()=>{order.href=orderURL(product,selection,brand)};update();
  const body=element('div','','sheet-body');
  body.append(element('p',product.category,'sheet-cat'),element('h2',product.name));
@@ -88,7 +89,7 @@ function openSheet(product){
 }
 sheet.addEventListener('click',event=>{if(event.target===sheet)sheet.close()});
 
-search.oninput=render;
+search.oninput=()=>{render();trackSearch(search.value)};
 $('#clear').onclick=()=>{search.value='';search.focus();render()};
 // index.html is written for Reka. Another business's page takes its logo, footer text, numbers and WhatsApp links from the profile
 // (the no-JavaScript text is not touched here: it only shows when this code cannot run, so the per-catalogue page sets it).
@@ -127,7 +128,7 @@ try{
  for(const name of ['',...names]){
   const button=element('button','','');button.type='button';button.dataset.name=name;button.setAttribute('aria-pressed',String(name===category));
   button.append(name||'Të gjitha',element('small',String(name?products.filter(product=>product.category===name).length:products.length)));
-  button.onclick=()=>{setCategory(name);scrollTo({top:Math.max(0,$('#katalogu').offsetTop-1),behavior:'smooth'})};
+  button.onclick=()=>{setCategory(name);if(name)track('select_category',{category:name});scrollTo({top:Math.max(0,$('#katalogu').offsetTop-1),behavior:'smooth'})};
   filters.append(button);
  }
  renderSpotlight();
