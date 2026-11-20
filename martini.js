@@ -5,6 +5,7 @@ import {applyLook,currentLook,lookFor,luminance,modeButton,saveChoice,MODE_KEY} 
 import {MARK_SVG,linkedProductId} from './brand.js';
 import {preloadPhotos,priceBlock,priceSync,saleBadge} from './card.js';
 import {initialSelection,propertiesOf,selectedOf,pickOption,photoOf,restoreSelection,orderParts} from './properties.js';
+import {itemOf,productEvent,track,trackLink,trackSearch} from './track.js';
 import {MARTINI,MARTINI_DEFAULTS,MARTINI_PRESETS,MARTINI_TEXTS,martiniTheme,martiniTexts,martiniTokens,spotlightOf,searchProducts,categoryNames,groupByCategory,splitDescription,cleanSize,noteOf,orderLine,orderURL,listURL,generalURL,readList,saveList} from './martini-core.js';
 
 export {MARTINI_DEFAULTS,MARTINI_PRESETS,MARTINI_TEXTS,martiniTheme,martiniTexts};
@@ -95,7 +96,7 @@ export async function startMartini(catalog){
  for(const item of savedItems)selections.set(item.id,restoreSelection(byId.get(item.id),item));   // a size, colour or custom value that no longer exists falls back to the first
  let list=savedItems.map(item=>item.id);
  const persist=()=>saveList(store,KEY,list.map(id=>({id,...selectionOf(byId.get(id))})));
- const toggleSave=product=>{list=list.includes(product.id)?list.filter(id=>id!==product.id):[...list,product.id];persist();sync()};
+ const toggleSave=product=>{const adding=!list.includes(product.id);list=list.includes(product.id)?list.filter(id=>id!==product.id):[...list,product.id];persist();sync();if(adding)productEvent('add_to_wishlist',product,selectionOf(product))};
 
  // Light or dark: the catalogue's own look unless the visitor chose otherwise (the button in the header).
  const look=lookFor(catalog,'martini',martiniTheme(catalog.theme));
@@ -130,7 +131,7 @@ export async function startMartini(catalog){
  for(const name of ['',...names]){
   const total=name?products.filter(product=>product.category===name).length:products.length;
   const chip=E('button','m-chip',name||'Të gjitha',E('small','',String(total)));chip.type='button';
-  chip.onclick=()=>{category=name;paintChips();refresh();chip.scrollIntoView({inline:'center',block:'nearest',behavior:reduceMotion()?'auto':'smooth'})};
+  chip.onclick=()=>{category=name;if(name)track('select_category',{category:name});paintChips();refresh();chip.scrollIntoView({inline:'center',block:'nearest',behavior:reduceMotion()?'auto':'smooth'})};
   chipFor.set(name,chip);chips.append(chip);
  }
  const bar=E('div','m-bar',E('div','m-wrap',chips));
@@ -172,7 +173,7 @@ export async function startMartini(catalog){
  // After a change the visitor made, bring the start of the results into view below the sticky bars.
  const bars=()=>top.offsetHeight+bar.offsetHeight;
  function refresh(){render();if(host.getBoundingClientRect().top<bars())host.scrollIntoView({block:'start',behavior:'instant'})}
- input.oninput=()=>{query=input.value;refresh()};
+ input.oninput=()=>{query=input.value;refresh();trackSearch(query)};
  input.onkeydown=event=>{if(event.key==='Escape'&&input.value){input.value=query='';refresh()}};
  clear.onclick=()=>{input.value=query='';refresh();input.focus()};
 
@@ -229,7 +230,8 @@ export async function startMartini(catalog){
  function openSheet(product,from=shown){sheetList=from.length?from:products;sheetIndex=Math.max(0,sheetList.indexOf(product));renderSheet();if(!sheet.open)open(sheet)}
  const step=delta=>{sheetIndex=(sheetIndex+delta+sheetList.length)%sheetList.length;renderSheet();(sheet.querySelector('.m-nav.'+(delta<0?'l':'r'))||sheet.querySelector('.m-x')).focus()};
  function renderSheet(){
-  const product=sheetList[sheetIndex],selection=selectionOf(product),{rows,text}=splitDescription(product.description),variants=(product.variants||[]).map(cleanSize),colors=product.colors||[];
+  const product=sheetList[sheetIndex],selection=selectionOf(product);productEvent('view_item',product,selection);
+  const {rows,text}=splitDescription(product.description),variants=(product.variants||[]).map(cleanSize),colors=product.colors||[];
   const specs=[...rows];
   if(variants.length===1&&!rows.some(([label])=>label==='Përmasa'))specs.push(['Përmasa',variants[0]]);
   if(colors.length===1&&!rows.some(([label])=>label==='Ngjyra'))specs.push(['Ngjyra',colors[0]]);
@@ -255,7 +257,7 @@ export async function startMartini(catalog){
   if(prices.row)body.append(prices.row);
   if(specs.length){const dl=E('dl','m-specs');for(const [label,value] of specs)dl.append(E('div','',E('dt','',label),E('dd','',value)));body.append(dl)}
   if(text)body.append(E('p','m-desc',text));
-  const order=E('a','m-btn mint',svg(ICON.chat),E('span','','Porosit në WhatsApp'));order.target='_blank';order.rel='noopener';
+  const order=E('a','m-btn mint',svg(ICON.chat),E('span','','Porosit në WhatsApp'));order.target='_blank';order.rel='noopener';trackLink(order,'whatsapp_order',()=>({items:[itemOf(product,selection)]}));
   const update=()=>{order.href=orderURL(product,selection);order.setAttribute('aria-label','Porosit '+orderLine(product,selection)+' në WhatsApp')};update();
   const changed=()=>{update();showPhoto();prices.refresh()};
   if(variants.length>1)body.append(choice(variants,selection,'variants','Përmasa',changed));
@@ -273,7 +275,7 @@ export async function startMartini(catalog){
   const items=list.map(id=>byId.get(id)).filter(Boolean);
   const closeBtn=E('button','m-x','×');closeBtn.type='button';closeBtn.setAttribute('aria-label','Mbyll');closeBtn.onclick=()=>close(drawer);
   const rows=E('div','m-dl');
-  const send=E('a','m-btn mint',svg(ICON.chat),E('span','','Dërgo listën në WhatsApp'));send.target='_blank';send.rel='noopener';
+  const send=E('a','m-btn mint',svg(ICON.chat),E('span','','Dërgo listën në WhatsApp'));send.target='_blank';send.rel='noopener';trackLink(send,'whatsapp_list',()=>items.length?{item_count:items.length,items:items.map(product=>itemOf(product,selectionOf(product)))}:null);
   const refreshSend=()=>{send.href=items.length?listURL(items.map(product=>({product,selection:selectionOf(product)}))):'#';send.setAttribute('aria-disabled',String(!items.length))};
   send.onclick=event=>{if(!items.length)event.preventDefault()};
   for(const product of items){
