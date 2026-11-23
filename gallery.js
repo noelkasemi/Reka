@@ -6,6 +6,8 @@ import {categoryNames,cleanSize,noteOf,initialSelection,orderDetail,orderURL,pre
 import {propertiesOf,selectedOf,pickOption,photoOf,restoreSelection,propertyText,orderParts} from './properties.js';
 import {BRANDS,profileOf,documentTitle,generalURL,listURL,logoMarkup,pageLink,linkedProductId} from './brand.js';
 import {itemOf,productEvent,track,trackLink,trackSearch} from './track.js';
+import {linkedCode,linkedProducts} from './links.js';
+import {playLink} from './linkfx.js';
 
 export const GALLERY_KEYS=['gBg','gTile','gInk','gMuted','gAccent','gAccentText','gDark','gDarkText','gLine'];
 export const GALLERY_DEFAULTS={
@@ -267,6 +269,9 @@ export async function startGallery(catalog,mode){
  render();show(0);sync();
  const linked=products.find(product=>product.id===linkedProductId());   // a shared product link (?p=<id>) opens that product once the loading screen is gone
  if(linked)RekaLoader.whenHidden(()=>openSheet(linked,products));
+ // A share link (?l=<code>) scrolls to its products and rings them once the loading screen is gone (not when ?p= already opens a popup). Looked up in the catalogue only: the hero repeats some products.
+ const marked=linked?[]:linkedProducts(catalog,linkedCode(),products);
+ if(marked.length)RekaLoader.whenHidden(()=>playLink(marked.map(product=>host.querySelector('[data-id="'+CSS.escape(product.id)+'"]')).filter(Boolean),{offset:()=>top.offsetHeight+bar.offsetHeight}));
  if(picks.length>1&&!matchMedia('(prefers-reduced-motion: reduce)').matches)timer=setInterval(()=>{if(!document.hidden&&!sheet.open&&!drawer.open)show((pick+1)%picks.length)},4800);
  await Promise.race([Promise.all([...root.querySelectorAll('.g-grid img')].slice(0,4).map(image=>image.decode().catch(()=>{}))),new Promise(done=>setTimeout(done,2500))]);
 }
