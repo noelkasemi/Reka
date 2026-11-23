@@ -6,6 +6,8 @@ import {MARK_SVG,linkedProductId} from './brand.js';
 import {preloadPhotos,priceBlock,priceSync,saleBadge} from './card.js';
 import {initialSelection,propertiesOf,selectedOf,pickOption,photoOf,restoreSelection,orderParts} from './properties.js';
 import {itemOf,productEvent,track,trackLink,trackSearch} from './track.js';
+import {linkedCode,linkedProducts} from './links.js';
+import {playLink} from './linkfx.js';
 import {MARTINI,MARTINI_DEFAULTS,MARTINI_PRESETS,MARTINI_TEXTS,martiniTheme,martiniTexts,martiniTokens,spotlightOf,searchProducts,categoryNames,groupByCategory,splitDescription,cleanSize,noteOf,orderLine,orderURL,listURL,generalURL,readList,saveList} from './martini-core.js';
 
 export {MARTINI_DEFAULTS,MARTINI_PRESETS,MARTINI_TEXTS,martiniTheme,martiniTexts};
@@ -298,5 +300,8 @@ export async function startMartini(catalog){
  paintChips();render();sync();
  const linked=products.find(product=>product.id===linkedProductId());   // a shared product link (?p=<id>) opens that product once the loading screen is gone
  if(linked)RekaLoader.whenHidden(()=>openSheet(linked,products));
+ // A share link (?l=<code>) scrolls to its products and rings them once the loading screen is gone (not when ?p= already opens a popup). Looked up in the catalogue only: the hero repeats some products.
+ const marked=linked?[]:linkedProducts(catalog,linkedCode(),products);
+ if(marked.length)RekaLoader.whenHidden(()=>playLink(marked.map(product=>host.querySelector('[data-id="'+CSS.escape(product.id)+'"]')).filter(Boolean),{offset:bars}));
  await Promise.race([Promise.all([...root.querySelectorAll('.m-grid img')].slice(0,4).map(image=>image.decode().catch(()=>{}))),new Promise(done=>setTimeout(done,2500))]);
 }

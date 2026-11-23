@@ -266,3 +266,9 @@ html[data-look=dark] .g-search{background:color-mix(in srgb,var(--gInk) 6%,trans
 .g-price-now{font-weight:700}
 .g-price-vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .g-sheet-body .g-price{font-size:22px}.g-sheet-body .g-price-old{font-size:15px}
+
+/* Share link (linkfx.js): a halo laid over each card a link points at, pulsing in the accent colour three times. It is a separate element, not a style on the
+   card (the Kornizë card is masked, which would hide a shadow on the card itself). Reduce-motion: a still halo until linkfx.js removes it. */
+.link-halo{position:absolute;z-index:10;pointer-events:none;border-radius:20px;--ring:var(--gAccent);--ring-glow:color-mix(in srgb,var(--gAccent) 45%,transparent);animation:link-ring 3s ease-out both}
+@keyframes link-ring{0%,100%{box-shadow:0 0 0 0 transparent}8%,41%,75%{box-shadow:0 0 0 4px var(--ring),0 0 24px 6px var(--ring-glow)}25%,58%{box-shadow:0 0 0 2px var(--ring),0 0 8px 0 var(--ring-glow)}92%{box-shadow:0 0 0 0 transparent}}
+@media(prefers-reduced-motion:reduce){.link-halo{animation:none;box-shadow:0 0 0 3px var(--ring),0 0 16px 3px var(--ring-glow)}}
