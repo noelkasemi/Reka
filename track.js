@@ -3,9 +3,13 @@
 import {orderParts} from './properties.js';
 
 const send=(...args)=>{try{if(typeof window.gtag==='function')window.gtag(...args)}catch{}};
-export const track=(name,params={})=>send('event',name,params);
-// The catalogue, business and design go along with every later event, then the page view (the tag is set up with send_page_view:false so it carries them too).
-export const startTracking=defaults=>{send('set',defaults);track('page_view')};
+// The catalogue, business and design are written onto each event: our Google tag ignores the page's gtag('config') and does not copy
+// custom values given with gtag('set') onto events (tried on the real tag, 2026-11-26).
+let common={};
+export const track=(name,params={})=>send('event',name,{...common,...params});
+// Keeps the three values, then sends the page view. index.html switches the tag's own page view off with gtag('set',{send_page_view:false})
+// BEFORE gtag('js'); without that line every visit counts two page views.
+export const startTracking=defaults=>{common=defaults;track('page_view')};
 // One product the way GA4's item reports want it: id, name, category and the chosen size, colour and options.
 export const itemOf=(product,selection={})=>{
  const variant=[selection.variant,selection.color,...orderParts(product,selection)].filter(Boolean).join(' · ');
